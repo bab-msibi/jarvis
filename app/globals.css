@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  border-color: rgba(84, 157, 208, 0.2);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background-color: #020811;
+  background-image: radial-gradient(circle at 12% 10%, rgba(34, 211, 238, 0.08), transparent 30%),
+    radial-gradient(circle at 88% 6%, rgba(45, 126, 216, 0.1), transparent 24%),
+    linear-gradient(180deg, #030913 0%, #020811 100%);
+  color: #d8f6ff;
+}
+
+.hud-grid {
+  background-image: linear-gradient(rgba(37, 82, 126, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 82, 126, 0.12) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.panel-base {
+  background: linear-gradient(180deg, rgba(6, 18, 33, 0.94) 0%, rgba(4, 13, 25, 0.96) 100%);
+  border: 1px solid rgba(45, 128, 185, 0.35);
+  box-shadow: 0 0 0 1px rgba(16, 68, 115, 0.18), inset 0 1px 0 rgba(78, 170, 230, 0.08);
+}
+
+.subtle-glow {
+  box-shadow: 0 0 20px rgba(17, 121, 193, 0.18);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(51, 128, 175, 0.5);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(4, 16, 30, 0.6);
+}
