@@ -1,4 +1,4 @@
-import { Activity, CircleDot, Cpu, HardDrive, MemoryStick, Thermometer } from "lucide-react";
+﻿import { Activity, CircleDot, Cpu, HardDrive, MemoryStick, Thermometer } from "lucide-react";
 
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { SystemStats } from "@/types/system";
@@ -66,3 +66,5 @@ export function SystemTopBar({ system }: SystemTopBarProps) {
     </header>
   );
 }
+
+
