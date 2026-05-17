@@ -39,9 +39,11 @@ export function WorkflowRow({ workflow, mobile, onOpen, onRun, onMenuAction }: W
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <WorkflowIcon className="h-4 w-4 text-cyan-300" />
-              <p className="truncate text-base text-cyan-100">{workflow.name}</p>
+              <p className="truncate text-base text-cyan-100" title={workflow.name}>
+                {workflow.name}
+              </p>
             </div>
-            <p className="mt-1 text-xs text-cyan-600">{workflow.description}</p>
+            <p className="mt-1 line-clamp-2 text-xs text-cyan-600">{workflow.description}</p>
           </div>
           <WorkflowStatusBadge status={workflow.status} />
         </div>
@@ -49,16 +51,16 @@ export function WorkflowRow({ workflow, mobile, onOpen, onRun, onMenuAction }: W
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <TriggerBadge trigger={workflow.trigger} />
           <span className="rounded-md bg-cyan-500/15 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-cyan-200">{agentTag(workflow.assignedAgent)}</span>
-          <span className="text-sm text-cyan-300">{workflow.assignedAgent}</span>
+          <span className="truncate text-sm text-cyan-300">{workflow.assignedAgent}</span>
         </div>
 
         <div className="mt-2 text-xs text-cyan-600">
           {workflow.linkedModel} / {workflow.linkedBrain}
         </div>
 
-        <div className="mt-2 flex items-center justify-between text-xs">
+        <div className="mt-2 flex items-center justify-between gap-2 text-xs">
           <p className="text-cyan-500">
-            Runs: {workflow.runs} • Success: {workflow.successRate}%
+            Runs: {workflow.runs} | Success: {workflow.successRate}%
           </p>
           <p className="inline-flex items-center gap-1 text-cyan-600">
             <CalendarClock className="h-3.5 w-3.5" />
@@ -67,13 +69,13 @@ export function WorkflowRow({ workflow, mobile, onOpen, onRun, onMenuAction }: W
         </div>
 
         <div className="mt-3 flex items-center justify-end gap-2" onClick={(event) => event.stopPropagation()}>
-          <button className={actionButtonClass} onClick={() => onRun(workflow)} type="button">
+          <button aria-label={`Run ${workflow.name}`} className={actionButtonClass} onClick={() => onRun(workflow)} type="button">
             <Play className="h-4 w-4" />
           </button>
-          <button className={actionButtonClass} onClick={() => onOpen(workflow)} type="button">
+          <button aria-label={`View ${workflow.name}`} className={actionButtonClass} onClick={() => onOpen(workflow)} type="button">
             <Eye className="h-4 w-4" />
           </button>
-          <button className={actionButtonClass} onClick={() => onMenuAction(workflow, "trigger")} type="button">
+          <button aria-label={`Configure trigger for ${workflow.name}`} className={actionButtonClass} onClick={() => onMenuAction(workflow, "trigger")} type="button">
             <RefreshCcw className="h-4 w-4" />
           </button>
           <WorkflowActionMenu onAction={(action) => onMenuAction(workflow, action)} />
@@ -93,18 +95,24 @@ export function WorkflowRow({ workflow, mobile, onOpen, onRun, onMenuAction }: W
           </div>
         </button>
       </td>
-      <td className="px-3 py-3 text-cyan-300">{workflow.description}</td>
+      <td className="max-w-[260px] px-3 py-3 text-cyan-300">
+        <span className="line-clamp-1">{workflow.description}</span>
+      </td>
       <td className="px-3 py-3">
         <TriggerBadge trigger={workflow.trigger} />
       </td>
       <td className="px-3 py-3">
-        <div className="flex items-center gap-2">
+        <div className="flex max-w-[230px] items-center gap-2">
           <span className="rounded-md bg-cyan-500/15 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-cyan-200">{agentTag(workflow.assignedAgent)}</span>
-          <span className="text-cyan-200">{workflow.assignedAgent}</span>
+          <span className="truncate text-cyan-200">{workflow.assignedAgent}</span>
         </div>
       </td>
-      <td className="px-3 py-3 text-cyan-200">{workflow.linkedModel}</td>
-      <td className="px-3 py-3 text-cyan-200">{workflow.linkedBrain}</td>
+      <td className="max-w-[190px] px-3 py-3 text-cyan-200">
+        <span className="line-clamp-1">{workflow.linkedModel}</span>
+      </td>
+      <td className="max-w-[190px] px-3 py-3 text-cyan-200">
+        <span className="line-clamp-1">{workflow.linkedBrain}</span>
+      </td>
       <td className="px-3 py-3">
         <WorkflowStatusBadge status={workflow.status} />
       </td>
@@ -113,13 +121,13 @@ export function WorkflowRow({ workflow, mobile, onOpen, onRun, onMenuAction }: W
       <td className="whitespace-nowrap px-3 py-3 text-cyan-600">{workflow.lastRun}</td>
       <td className="px-3 py-3">
         <div className="flex items-center justify-end gap-2">
-          <button className={actionButtonClass} onClick={() => onRun(workflow)} type="button">
+          <button aria-label={`Run ${workflow.name}`} className={actionButtonClass} onClick={() => onRun(workflow)} type="button">
             <Play className="h-4 w-4" />
           </button>
-          <button className={actionButtonClass} onClick={() => onOpen(workflow)} type="button">
+          <button aria-label={`View ${workflow.name}`} className={actionButtonClass} onClick={() => onOpen(workflow)} type="button">
             <Eye className="h-4 w-4" />
           </button>
-          <button className={actionButtonClass} onClick={() => onMenuAction(workflow, "trigger")} type="button">
+          <button aria-label={`Configure trigger for ${workflow.name}`} className={actionButtonClass} onClick={() => onMenuAction(workflow, "trigger")} type="button">
             <RefreshCcw className="h-4 w-4" />
           </button>
           <WorkflowActionMenu onAction={(action) => onMenuAction(workflow, action)} />

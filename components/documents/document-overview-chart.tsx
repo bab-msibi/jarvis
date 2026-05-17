@@ -20,8 +20,8 @@ export function DocumentOverviewChart({ totalDocuments, breakdown }: DocumentOve
   ).segments;
 
   return (
-    <div className="flex items-center gap-4">
-      <div className="relative h-32 w-32">
+    <div className="flex flex-wrap items-center gap-4">
+      <div className="relative h-32 w-32 shrink-0">
         <div className="h-full w-full rounded-full border border-cyan-900/40" style={{ background: `conic-gradient(${segments.join(", ")})` }} />
         <div className="absolute inset-[10px] flex flex-col items-center justify-center rounded-full bg-[#021024]">
           <p className="text-3xl text-cyan-100">{totalDocuments.toLocaleString()}</p>
@@ -29,7 +29,7 @@ export function DocumentOverviewChart({ totalDocuments, breakdown }: DocumentOve
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="min-w-0 flex-1 space-y-2">
         {breakdown.map((item) => {
           const percent = totalDocuments ? Math.round((item.count / totalDocuments) * 100) : 0;
           return (

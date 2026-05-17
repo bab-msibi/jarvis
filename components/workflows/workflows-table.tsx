@@ -8,6 +8,8 @@ import { TriggerBadge } from "@/components/workflows/trigger-badge";
 import { WorkflowActionMenu, WorkflowMenuAction } from "@/components/workflows/workflow-action-menu";
 import { WorkflowRow } from "@/components/workflows/workflow-row";
 import { WorkflowStatusBadge } from "@/components/workflows/workflow-status-badge";
+import { DataTableWrapper } from "@/components/shared/data-table-wrapper";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Workflow } from "@/types/workflow";
 
 type WorkflowsTableProps = {
@@ -68,9 +70,9 @@ export function WorkflowsTable({
         header: "Agent",
         accessorKey: "assignedAgent",
         cell: ({ row }) => (
-          <div className="flex items-center gap-2">
+          <div className="flex max-w-[220px] items-center gap-2">
             <span className="rounded-md bg-cyan-500/15 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-cyan-200">{agentTag(row.original.assignedAgent)}</span>
-            <span className="text-cyan-200">{row.original.assignedAgent}</span>
+            <span className="truncate text-cyan-200">{row.original.assignedAgent}</span>
           </div>
         )
       },
@@ -122,11 +124,12 @@ export function WorkflowsTable({
 
   const start = totalWorkflows ? (currentPage - 1) * pageSize + 1 : 0;
   const end = Math.min(currentPage * pageSize, totalWorkflows);
+  const pages = Array.from({ length: totalPages }, (_, index) => index + 1).slice(Math.max(0, currentPage - 3), currentPage + 2);
 
   return (
     <section className="panel-base rounded-2xl">
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[1500px]">
+      <DataTableWrapper>
+        <table className="table-sticky-head w-full min-w-[1500px]">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr className="border-b border-cyan-900/35 text-left text-xs uppercase tracking-[0.08em] text-cyan-600" key={headerGroup.id}>
@@ -144,13 +147,19 @@ export function WorkflowsTable({
             ))}
           </tbody>
         </table>
-      </div>
+      </DataTableWrapper>
 
       <div className="space-y-3 p-3 md:hidden">
         {workflows.map((workflow) => (
           <WorkflowRow key={workflow.id} mobile onMenuAction={onMenuAction} onOpen={onOpen} onRun={onRun} workflow={workflow} />
         ))}
       </div>
+
+      {!workflows.length ? (
+        <div className="px-3 pb-3">
+          <EmptyState description="No workflows match the selected filters." title="No workflows found" />
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-cyan-900/35 px-4 py-3">
         <p className="text-sm text-cyan-600">
@@ -166,7 +175,7 @@ export function WorkflowsTable({
             <ChevronLeft className="h-4 w-4" />
           </button>
 
-          {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+          {pages.map((page) => (
             <button
               className={`rounded-md border px-3 py-1.5 text-sm transition ${
                 page === currentPage

@@ -16,15 +16,17 @@ export function ModalShell({ open, title, description, children, footer, onClose
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#01050ccc] p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#01050ccc] p-0 sm:items-center sm:p-4" onClick={onClose}>
       <div
-        className="panel-base w-full max-w-lg rounded-2xl border border-cyan-700/40"
+        aria-modal="true"
+        className="panel-base flex max-h-[88vh] w-full flex-col overflow-hidden rounded-t-2xl border border-cyan-700/40 sm:max-w-lg sm:rounded-2xl"
+        role="dialog"
         onClick={(event) => event.stopPropagation()}
       >
         <header className="flex items-start justify-between border-b border-cyan-900/35 px-5 py-4">
-          <div>
-            <h3 className="text-lg text-cyan-100">{title}</h3>
-            {description ? <p className="mt-1 text-sm text-cyan-600">{description}</p> : null}
+          <div className="min-w-0">
+            <h3 className="truncate text-lg text-cyan-100">{title}</h3>
+            {description ? <p className="mt-1 line-clamp-2 text-sm text-cyan-600">{description}</p> : null}
           </div>
           <button
             aria-label="Close modal"
@@ -36,7 +38,7 @@ export function ModalShell({ open, title, description, children, footer, onClose
           </button>
         </header>
 
-        <div className="px-5 py-4">{children}</div>
+        <div className="overflow-y-auto px-5 py-4">{children}</div>
 
         {footer ? <footer className="flex items-center justify-end gap-2 border-t border-cyan-900/35 px-5 py-4">{footer}</footer> : null}
       </div>

@@ -31,13 +31,15 @@ export function AgentRow({ agent, mobile, onChat, onView, onMenuAction, onOpenPr
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="text-base text-cyan-100">{agent.name}</p>
+                <p className="truncate text-base text-cyan-100" title={agent.name}>
+                  {agent.name}
+                </p>
                 <p className="text-xs text-cyan-600">Last active: {agent.lastActive}</p>
               </div>
               <AgentStatusBadge status={agent.status} />
             </div>
             <p className="mt-2 text-sm text-cyan-300">{agent.role}</p>
-            <p className="mt-2 text-sm text-sky-100">{agent.currentTask}</p>
+            <p className="mt-2 line-clamp-2 text-sm text-sky-100">{agent.currentTask}</p>
             <p className="mt-2 text-xs text-cyan-600">Model: {agent.assignedModel}</p>
             <div className="mt-2 flex items-center gap-4 text-xs text-cyan-400">
               <p className="flex items-center gap-1">
@@ -53,10 +55,10 @@ export function AgentRow({ agent, mobile, onChat, onView, onMenuAction, onOpenPr
         </div>
 
         <div className="mt-3 flex items-center justify-end gap-2" onClick={(event) => event.stopPropagation()}>
-          <button className={actionButtonClassName} onClick={() => onChat(agent)} type="button">
+          <button aria-label={`Chat with ${agent.name}`} className={actionButtonClassName} onClick={() => onChat(agent)} type="button">
             <MessageCircle className="h-4 w-4" />
           </button>
-          <button className={actionButtonClassName} onClick={() => onView(agent)} type="button">
+          <button aria-label={`View ${agent.name}`} className={actionButtonClassName} onClick={() => onView(agent)} type="button">
             <Eye className="h-4 w-4" />
           </button>
           <AgentActionMenu onAction={(action) => onMenuAction(agent, action)} />
@@ -70,8 +72,10 @@ export function AgentRow({ agent, mobile, onChat, onView, onMenuAction, onOpenPr
       <td className="whitespace-nowrap px-4 py-3">
         <div className="flex items-center gap-3">
           <AgentAvatar className="h-11 w-11" initials={agent.initials} />
-          <div>
-            <p className="text-base text-cyan-100">{agent.name}</p>
+          <div className="min-w-0">
+            <p className="truncate text-base text-cyan-100" title={agent.name}>
+              {agent.name}
+            </p>
             <p className="text-xs text-cyan-600">Last active: {agent.lastActive}</p>
           </div>
         </div>
@@ -80,8 +84,12 @@ export function AgentRow({ agent, mobile, onChat, onView, onMenuAction, onOpenPr
       <td className="px-3 py-3">
         <AgentStatusBadge status={agent.status} />
       </td>
-      <td className="max-w-[300px] px-3 py-3 text-cyan-100">{agent.currentTask}</td>
-      <td className="whitespace-nowrap px-3 py-3 text-cyan-100">{agent.assignedModel}</td>
+      <td className="max-w-[300px] px-3 py-3 text-cyan-100">
+        <span className="line-clamp-2">{agent.currentTask}</span>
+      </td>
+      <td className="max-w-[180px] px-3 py-3 text-cyan-100">
+        <span className="line-clamp-1">{agent.assignedModel}</span>
+      </td>
       <td className="whitespace-nowrap px-3 py-3 text-cyan-200">
         <span className="inline-flex items-center gap-1">
           <Cpu className="h-4 w-4 text-cyan-400" />
@@ -96,10 +104,10 @@ export function AgentRow({ agent, mobile, onChat, onView, onMenuAction, onOpenPr
       </td>
       <td className="px-3 py-3">
         <div className="flex items-center justify-end gap-2" onClick={(event) => event.stopPropagation()}>
-          <button className={actionButtonClassName} onClick={() => onChat(agent)} type="button">
+          <button aria-label={`Chat with ${agent.name}`} className={actionButtonClassName} onClick={() => onChat(agent)} type="button">
             <MessageCircle className="h-4 w-4" />
           </button>
-          <button className={actionButtonClassName} onClick={() => onView(agent)} type="button">
+          <button aria-label={`View ${agent.name}`} className={actionButtonClassName} onClick={() => onView(agent)} type="button">
             <Eye className="h-4 w-4" />
           </button>
           <AgentActionMenu onAction={(action) => onMenuAction(agent, action)} />

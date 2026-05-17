@@ -34,6 +34,7 @@ import { SearchToolbar, MemorySortOption, MemoryTimeRange } from "@/components/m
 import { SidebarPanel } from "@/components/memory/sidebar-panel";
 import { StatsCard } from "@/components/memory/stats-card";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
 import { memoryData } from "@/lib/mock/memory";
@@ -314,12 +315,9 @@ export default function MemoryPage() {
 
   return (
     <DashboardLayout system={systemStats}>
-      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
-          <section className="panel-base rounded-2xl p-5 sm:p-6">
-            <h1 className="text-3xl text-cyan-100">Memory Management</h1>
-            <p className="mt-1 text-cyan-600">Monitor, manage and optimize AI memory across all systems and agents.</p>
-          </section>
+          <PageHeader subtitle="Monitor, manage and optimize AI memory across all systems and agents." title="Memory Management" />
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
             <StatsCard description="All time memories" icon={Database} label="Total Memories" tone="cyan" value={memoryData.totals.totalMemories.toLocaleString()} />

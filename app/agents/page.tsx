@@ -27,6 +27,7 @@ import { SearchToolbar } from "@/components/agents/search-toolbar";
 import { SidebarPanel } from "@/components/agents/sidebar-panel";
 import { StatsCard } from "@/components/agents/stats-card";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { PageHeader } from "@/components/shared/page-header";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
 import { agents as baseAgents } from "@/lib/mock/agents";
 import { brains } from "@/lib/mock/brains";
@@ -301,12 +302,9 @@ export default function AgentsPage() {
 
   return (
     <DashboardLayout system={systemStats}>
-      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
-          <section className="panel-base rounded-2xl p-5 sm:p-6">
-            <h1 className="text-3xl text-cyan-100">Agents</h1>
-            <p className="mt-1 text-cyan-600">Manage and monitor all AI agents running on your system.</p>
-          </section>
+          <PageHeader subtitle="Manage and monitor all AI agents running on your system." title="Agents" />
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <StatsCard description="Active agents" icon={Bot} label="Total Agents" tone="cyan" value={counts.total} />
@@ -319,6 +317,12 @@ export default function AgentsPage() {
           <section className="panel-base rounded-2xl p-4 sm:p-5">
             <SearchToolbar
               onCreate={() => openModal("create")}
+              onReset={() => {
+                setSearchValue("");
+                setStatusFilter("ALL");
+                setRoleFilter("ALL");
+                setCurrentPage(1);
+              }}
               onRoleChange={(value) => {
                 setRoleFilter(value);
                 setCurrentPage(1);

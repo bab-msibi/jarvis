@@ -8,6 +8,8 @@ import { BrainActionMenu, BrainMenuAction } from "@/components/brains/brain-acti
 import { BrainKnowledgeBadge } from "@/components/brains/brain-knowledge-badge";
 import { BrainRow } from "@/components/brains/brain-row";
 import { BrainStatusBadge } from "@/components/brains/brain-status-badge";
+import { DataTableWrapper } from "@/components/shared/data-table-wrapper";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Brain } from "@/types/brain";
 
 type BrainsTableProps = {
@@ -59,7 +61,7 @@ export function BrainsTable({
       {
         header: "Purpose",
         accessorKey: "purpose",
-        cell: ({ getValue }) => <span className="text-cyan-200">{String(getValue())}</span>
+        cell: ({ getValue }) => <span className="line-clamp-2 max-w-[290px] text-cyan-200">{String(getValue())}</span>
       },
       {
         header: "Linked Agents",
@@ -127,11 +129,12 @@ export function BrainsTable({
 
   const start = totalBrains ? (currentPage - 1) * pageSize + 1 : 0;
   const end = Math.min(currentPage * pageSize, totalBrains);
+  const pages = Array.from({ length: totalPages }, (_, index) => index + 1).slice(Math.max(0, currentPage - 3), currentPage + 2);
 
   return (
     <section className="panel-base rounded-2xl">
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[1250px]">
+      <DataTableWrapper>
+        <table className="table-sticky-head w-full min-w-[1250px]">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr className="border-b border-cyan-900/35 text-left text-xs uppercase tracking-[0.08em] text-cyan-600" key={headerGroup.id}>
@@ -155,13 +158,19 @@ export function BrainsTable({
             ))}
           </tbody>
         </table>
-      </div>
+      </DataTableWrapper>
 
       <div className="space-y-3 p-3 md:hidden">
         {brains.map((brain) => (
           <BrainRow brain={brain} key={brain.id} mobile onMenuAction={onMenuAction} onViewDetails={onViewDetails} />
         ))}
       </div>
+
+      {!brains.length ? (
+        <div className="px-3 pb-3">
+          <EmptyState description="Create a new brain or clear filters to see results." title="No brains found" />
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-cyan-900/35 px-4 py-3">
         <p className="text-sm text-cyan-600">
@@ -178,7 +187,7 @@ export function BrainsTable({
             <ChevronLeft className="h-4 w-4" />
           </button>
 
-          {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+          {pages.map((page) => (
             <button
               className={`rounded-md border px-3 py-1.5 text-sm transition ${
                 page === currentPage

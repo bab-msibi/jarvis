@@ -32,7 +32,7 @@ export function TaskCard({ task, onOpenDetails, onMenuAction }: TaskCardProps) {
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="rounded-md border border-cyan-900/40 bg-cyan-500/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-cyan-200">
+        <span className="max-w-[160px] truncate rounded-md border border-cyan-900/40 bg-cyan-500/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-cyan-200">
           {task.linkedModel}
         </span>
         <TaskPriorityBadge priority={task.priority} />

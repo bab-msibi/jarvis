@@ -20,6 +20,8 @@ import { SidebarPanel } from "@/components/brains/sidebar-panel";
 import { StatsCard } from "@/components/brains/stats-card";
 import { SyncKnowledgeModal } from "@/components/brains/sync-knowledge-modal";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { ActionButtonGroup } from "@/components/shared/action-button-group";
+import { PageHeader } from "@/components/shared/page-header";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
 import { agents } from "@/lib/mock/agents";
 import { brains as baseBrains } from "@/lib/mock/brains";
@@ -306,24 +308,24 @@ export default function BrainsPage() {
 
   return (
     <DashboardLayout system={systemStats}>
-      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
-          <section className="panel-base rounded-2xl p-5 sm:p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h1 className="text-3xl text-cyan-100">Brains</h1>
-                <p className="mt-1 text-cyan-600">Manage, update and configure all AI brains and knowledge systems.</p>
-              </div>
-              <button
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-cyan-500/55 bg-cyan-500/20 px-4 text-sm text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-500/30"
-                onClick={() => openModal("add")}
-                type="button"
-              >
-                <Plus className="h-4 w-4" />
-                Add Brain
-              </button>
-            </div>
-          </section>
+          <PageHeader
+            actions={
+              <ActionButtonGroup>
+                <button
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-cyan-500/55 bg-cyan-500/20 px-4 text-sm text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-500/30"
+                  onClick={() => openModal("add")}
+                  type="button"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Brain
+                </button>
+              </ActionButtonGroup>
+            }
+            subtitle="Manage, update and configure all AI brains and knowledge systems."
+            title="Brains"
+          />
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <StatsCard description="All knowledge systems" icon={BrainCircuit} label="Total Brains" tone="cyan" value={counts.total} />
@@ -361,6 +363,15 @@ export default function BrainsPage() {
                 setCurrentPage(1);
               }}
               onToggleLayout={() => setCompactCards((current) => !current)}
+              onReset={() => {
+                setSearchValue("");
+                setStatusFilter("ALL");
+                setTypeFilter("ALL");
+                setLinkedModelFilter("ALL");
+                setLinkedAgentFilter("ALL");
+                setSortBy("recent");
+                setCurrentPage(1);
+              }}
               onTypeChange={(value) => {
                 setTypeFilter(value);
                 setCurrentPage(1);

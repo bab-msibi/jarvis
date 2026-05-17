@@ -32,6 +32,7 @@ type SearchToolbarProps = {
   onEndDateChange: (value: string) => void;
   onSortChange: (value: TaskSortOption) => void;
   onViewModeChange: (value: TaskViewMode) => void;
+  onReset: () => void;
 };
 
 const statusOptions: Array<{ label: string; value: "ALL" | TaskStatus }> = [
@@ -85,10 +86,11 @@ export function SearchToolbar({
   onStartDateChange,
   onEndDateChange,
   onSortChange,
-  onViewModeChange
+  onViewModeChange,
+  onReset
 }: SearchToolbarProps) {
   return (
-    <div className="grid gap-3 xl:grid-cols-[minmax(0,1.1fr)_auto_auto_auto_auto_auto_auto_auto_auto]">
+    <div className="grid gap-3 xl:grid-cols-[minmax(0,1.1fr)_auto_auto_auto_auto_auto_auto_auto_auto_auto]">
       <label className="flex h-11 items-center gap-2 rounded-lg border border-cyan-900/40 bg-sky-950/40 px-3">
         <Search className="h-4 w-4 text-cyan-700" />
         <input
@@ -193,6 +195,14 @@ export function SearchToolbar({
           Kanban
         </button>
       </div>
+
+      <button
+        className="h-11 rounded-lg border border-cyan-900/40 bg-sky-950/35 px-3 text-sm text-cyan-300 transition hover:border-cyan-500/60 hover:text-cyan-100"
+        onClick={onReset}
+        type="button"
+      >
+        Reset
+      </button>
     </div>
   );
 }

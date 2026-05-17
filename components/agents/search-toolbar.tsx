@@ -13,6 +13,7 @@ type SearchToolbarProps = {
   onStatusChange: (value: "ALL" | AgentStatus) => void;
   onRoleChange: (value: string) => void;
   onCreate: () => void;
+  onReset: () => void;
 };
 
 const statusOptions: Array<{ label: string; value: "ALL" | AgentStatus }> = [
@@ -31,10 +32,11 @@ export function SearchToolbar({
   onSearchChange,
   onStatusChange,
   onRoleChange,
-  onCreate
+  onCreate,
+  onReset
 }: SearchToolbarProps) {
   return (
-    <div className="grid gap-3 lg:grid-cols-[auto_1fr_auto_auto]">
+    <div className="grid gap-3 lg:grid-cols-[auto_1fr_auto_auto_auto]">
       <button
         className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-cyan-500/55 bg-cyan-500/20 px-4 text-sm text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-500/30"
         onClick={onCreate}
@@ -80,6 +82,14 @@ export function SearchToolbar({
           </option>
         ))}
       </select>
+
+      <button
+        className="h-11 rounded-lg border border-cyan-900/40 bg-sky-950/35 px-3 text-sm text-cyan-300 transition hover:border-cyan-500/60 hover:text-cyan-100"
+        onClick={onReset}
+        type="button"
+      >
+        Reset Filters
+      </button>
     </div>
   );
 }

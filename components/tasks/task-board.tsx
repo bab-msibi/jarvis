@@ -17,12 +17,14 @@ export function TaskBoard({ tasks, onOpenDetails, onMenuAction }: TaskBoardProps
       <header className="mb-3">
         <h2 className="text-sm uppercase tracking-[0.08em] text-cyan-300">Task Board</h2>
       </header>
-      <div className="grid gap-3 overflow-x-auto xl:grid-cols-5">
-        <TaskColumn onMenuAction={onMenuAction} onOpenDetails={onOpenDetails} tasks={grouped.notStarted} title="Not Started" tone="slate" total={grouped.notStarted.length} />
-        <TaskColumn onMenuAction={onMenuAction} onOpenDetails={onOpenDetails} tasks={grouped.inProgress} title="In Progress" tone="cyan" total={grouped.inProgress.length} />
-        <TaskColumn onMenuAction={onMenuAction} onOpenDetails={onOpenDetails} tasks={grouped.onHold} title="On Hold" tone="amber" total={grouped.onHold.length} />
-        <TaskColumn onMenuAction={onMenuAction} onOpenDetails={onOpenDetails} tasks={grouped.completed} title="Completed" tone="emerald" total={grouped.completed.length} />
-        <TaskColumn onMenuAction={onMenuAction} onOpenDetails={onOpenDetails} tasks={grouped.failed} title="Failed" tone="rose" total={grouped.failed.length} />
+      <div className="overflow-x-auto">
+        <div className="grid min-w-max auto-cols-[minmax(250px,1fr)] grid-flow-col gap-3 xl:min-w-0 xl:grid-cols-5 xl:grid-flow-row">
+          <TaskColumn onMenuAction={onMenuAction} onOpenDetails={onOpenDetails} tasks={grouped.notStarted} title="Not Started" tone="slate" total={grouped.notStarted.length} />
+          <TaskColumn onMenuAction={onMenuAction} onOpenDetails={onOpenDetails} tasks={grouped.inProgress} title="In Progress" tone="cyan" total={grouped.inProgress.length} />
+          <TaskColumn onMenuAction={onMenuAction} onOpenDetails={onOpenDetails} tasks={grouped.onHold} title="On Hold" tone="amber" total={grouped.onHold.length} />
+          <TaskColumn onMenuAction={onMenuAction} onOpenDetails={onOpenDetails} tasks={grouped.completed} title="Completed" tone="emerald" total={grouped.completed.length} />
+          <TaskColumn onMenuAction={onMenuAction} onOpenDetails={onOpenDetails} tasks={grouped.failed} title="Failed" tone="rose" total={grouped.failed.length} />
+        </div>
       </div>
     </section>
   );
