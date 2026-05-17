@@ -6,6 +6,7 @@ import {
   Database,
   FileText,
   LayoutDashboard,
+  MessageSquareText,
   MonitorCheck,
   Network,
   NotebookTabs,
@@ -37,7 +38,8 @@ export const sidebarSections: SidebarSection[] = [
       { label: "Models", href: "/models", icon: Activity },
       { label: "Brains", href: "/brains", icon: BrainCircuit },
       { label: "Tasks", href: "/tasks", icon: NotebookTabs },
-      { label: "Workflows", href: "/workflows", icon: Workflow }
+      { label: "Workflows", href: "/workflows", icon: Workflow },
+      { label: "Chat", href: "/chat", icon: MessageSquareText }
     ]
   },
   {
