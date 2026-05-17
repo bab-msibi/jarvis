@@ -14,10 +14,10 @@ type MemoryUsagePanelProps = {
 export function MemoryUsagePanel({ usedGB, totalAllocatedGB, availableGB, slices }: MemoryUsagePanelProps) {
   return (
     <div className="space-y-3">
-      <div className="h-[210px]">
+      <div className="relative h-[210px]">
         <ResponsiveContainer height="100%" minHeight={190} minWidth={0} width="100%">
           <PieChart>
-            <Pie cx="34%" cy="50%" data={slices} dataKey="valueGB" innerRadius={44} outerRadius={66} paddingAngle={2} stroke="none">
+            <Pie cx="50%" cy="50%" data={slices} dataKey="valueGB" innerRadius={44} outerRadius={66} paddingAngle={2} stroke="none">
               {slices.map((slice) => (
                 <Cell fill={slice.color} key={slice.label} />
               ))}
@@ -25,11 +25,11 @@ export function MemoryUsagePanel({ usedGB, totalAllocatedGB, availableGB, slices
             <Tooltip contentStyle={{ background: "#071523", border: "1px solid rgba(56, 189, 248, 0.4)", borderRadius: 8 }} />
           </PieChart>
         </ResponsiveContainer>
-      </div>
 
-      <div className="-mt-[155px] ml-[16px] w-[95px] text-center">
-        <p className="text-3xl text-cyan-100">{usedGB.toFixed(1)} GB</p>
-        <p className="text-xs uppercase tracking-[0.08em] text-cyan-600">Used</p>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+          <p className="text-3xl text-cyan-100">{usedGB.toFixed(1)} GB</p>
+          <p className="text-xs uppercase tracking-[0.08em] text-cyan-600">Used</p>
+        </div>
       </div>
 
       <div className="space-y-2 pt-2">

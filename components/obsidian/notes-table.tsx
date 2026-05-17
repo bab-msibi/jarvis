@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import { NoteMenuAction } from "@/components/obsidian/note-action-menu";
 import { NoteRow } from "@/components/obsidian/note-row";
 import { TagBadge } from "@/components/obsidian/tag-badge";
+import { DataTableWrapper } from "@/components/shared/data-table-wrapper";
 import { ObsidianNote } from "@/types/obsidian";
 
 export type NotesViewMode = "list" | "grid";
@@ -86,6 +87,7 @@ export function NotesTable({
   const start = totalNotes ? (currentPage - 1) * pageSize + 1 : 0;
   const end = Math.min(currentPage * pageSize, totalNotes);
   const displayTotal = totalDisplayCount ?? totalNotes;
+  const pages = Array.from({ length: totalPages }, (_, index) => index + 1).slice(Math.max(0, currentPage - 3), currentPage + 2);
 
   return (
     <section className="panel-base rounded-2xl">
@@ -101,8 +103,8 @@ export function NotesTable({
         </div>
       ) : (
         <>
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[920px]">
+          <DataTableWrapper>
+            <table className="table-sticky-head w-full min-w-[920px]">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr className="border-b border-cyan-900/35 text-left text-xs uppercase tracking-[0.08em] text-cyan-600" key={headerGroup.id}>
@@ -121,7 +123,7 @@ export function NotesTable({
                 ))}
               </tbody>
             </table>
-          </div>
+          </DataTableWrapper>
 
           <div className="space-y-3 p-3 md:hidden">
             {notes.map((note) => (
@@ -153,22 +155,20 @@ export function NotesTable({
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            {Array.from({ length: totalPages }, (_, index) => index + 1)
-              .slice(0, 4)
-              .map((page) => (
-                <button
-                  className={`rounded-md border px-3 py-1.5 text-sm transition ${
-                    page === currentPage
-                      ? "border-cyan-400/60 bg-cyan-500/20 text-cyan-100"
-                      : "border-cyan-900/40 text-cyan-400 hover:border-cyan-500/50 hover:text-cyan-100"
-                  }`}
-                  key={page}
-                  onClick={() => onPageChange(page)}
-                  type="button"
-                >
-                  {page}
-                </button>
-              ))}
+            {pages.map((page) => (
+              <button
+                className={`rounded-md border px-3 py-1.5 text-sm transition ${
+                  page === currentPage
+                    ? "border-cyan-400/60 bg-cyan-500/20 text-cyan-100"
+                    : "border-cyan-900/40 text-cyan-400 hover:border-cyan-500/50 hover:text-cyan-100"
+                }`}
+                key={page}
+                onClick={() => onPageChange(page)}
+                type="button"
+              >
+                {page}
+              </button>
+            ))}
             <button
               className="rounded-md border border-cyan-900/40 p-2 text-cyan-300 transition hover:border-cyan-500/50 disabled:cursor-not-allowed disabled:opacity-40"
               disabled={currentPage >= totalPages}

@@ -27,7 +27,7 @@ export function TaskColumn({ title, total, tasks, tone = "slate", onOpenDetails,
   return (
     <section
       aria-label={title}
-      className={cn("min-h-[280px] rounded-xl border p-3", toneStyles[tone])}
+      className={cn("min-h-[280px] min-w-[250px] rounded-xl border p-3 xl:min-w-0", toneStyles[tone])}
       data-droppable="true"
       data-status={title.toUpperCase()}
     >
@@ -36,7 +36,7 @@ export function TaskColumn({ title, total, tasks, tone = "slate", onOpenDetails,
         <span className="rounded-md bg-black/25 px-2 py-0.5 text-xs">{total}</span>
       </header>
 
-      <div className="space-y-2 overflow-y-auto pb-1">
+      <div className="space-y-2 overflow-y-auto pb-1 xl:max-h-[340px]">
         {visibleTasks.length ? (
           visibleTasks.map((task) => (
             <TaskCard key={task.id} onMenuAction={onMenuAction} onOpenDetails={onOpenDetails} task={task} />

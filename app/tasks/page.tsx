@@ -30,6 +30,8 @@ import { TaskMenuAction } from "@/components/tasks/task-action-menu";
 import { TaskTemplateModal } from "@/components/tasks/task-template-modal";
 import { TasksTable } from "@/components/tasks/tasks-table";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { ActionButtonGroup } from "@/components/shared/action-button-group";
+import { PageHeader } from "@/components/shared/page-header";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
 import { agents } from "@/lib/mock/agents";
 import { brains } from "@/lib/mock/brains";
@@ -329,24 +331,24 @@ export default function TasksPage() {
 
   return (
     <DashboardLayout system={systemStats}>
-      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
-          <section className="panel-base rounded-2xl p-5 sm:p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h1 className="text-3xl text-cyan-100">Tasks</h1>
-                <p className="mt-1 text-cyan-600">Monitor, manage and track all tasks across your AI agents and workflows.</p>
-              </div>
-              <button
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-cyan-500/55 bg-cyan-500/20 px-4 text-sm text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-500/30"
-                onClick={() => openModal("create")}
-                type="button"
-              >
-                <Plus className="h-4 w-4" />
-                New Task
-              </button>
-            </div>
-          </section>
+          <PageHeader
+            actions={
+              <ActionButtonGroup>
+                <button
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-cyan-500/55 bg-cyan-500/20 px-4 text-sm text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-500/30"
+                  onClick={() => openModal("create")}
+                  type="button"
+                >
+                  <Plus className="h-4 w-4" />
+                  New Task
+                </button>
+              </ActionButtonGroup>
+            }
+            subtitle="Monitor, manage and track all tasks across your AI agents and workflows."
+            title="Tasks"
+          />
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
             <StatsCard description="All tasks" icon={Database} label="Total Tasks" tone="cyan" value={counts.total} />
@@ -403,6 +405,18 @@ export default function TasksPage() {
                 setCurrentPage(1);
               }}
               onViewModeChange={(value) => setViewMode(value)}
+              onReset={() => {
+                setSearchValue("");
+                setStatusFilter("ALL");
+                setPriorityFilter("ALL");
+                setAgentFilter("ALL");
+                setModelFilter("ALL");
+                setBrainFilter("ALL");
+                setStartDate("");
+                setEndDate("");
+                setSortBy("recent");
+                setCurrentPage(1);
+              }}
               priorityFilter={priorityFilter}
               searchValue={searchValue}
               sortBy={sortBy}

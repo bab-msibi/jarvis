@@ -28,6 +28,8 @@ import { StatsCard } from "@/components/models/stats-card";
 import { SyncQuotaModal } from "@/components/models/sync-quota-modal";
 import { TestConnectionModal } from "@/components/models/test-connection-modal";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { ActionButtonGroup } from "@/components/shared/action-button-group";
+import { PageHeader } from "@/components/shared/page-header";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
 import { models as baseModels } from "@/lib/mock/models";
 import { systemStats } from "@/lib/mock/system";
@@ -233,24 +235,24 @@ export default function ModelsPage() {
 
   return (
     <DashboardLayout system={systemStats}>
-      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
-          <section className="panel-base rounded-2xl p-5 sm:p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h1 className="text-3xl text-cyan-100">Models</h1>
-                <p className="mt-1 text-cyan-600">Manage and configure all AI models available on your system.</p>
-              </div>
-              <button
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-cyan-500/55 bg-cyan-500/20 px-4 text-sm text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-500/30"
-                onClick={() => openModal("add")}
-                type="button"
-              >
-                <Plus className="h-4 w-4" />
-                Add Model
-              </button>
-            </div>
-          </section>
+          <PageHeader
+            actions={
+              <ActionButtonGroup>
+                <button
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-cyan-500/55 bg-cyan-500/20 px-4 text-sm text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-500/30"
+                  onClick={() => openModal("add")}
+                  type="button"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Model
+                </button>
+              </ActionButtonGroup>
+            }
+            subtitle="Manage and configure all AI models available on your system."
+            title="Models"
+          />
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <StatsCard description="All models" icon={Database} label="Total Models" tone="cyan" value={counts.total} />
@@ -280,6 +282,14 @@ export default function ModelsPage() {
                 setCurrentPage(1);
               }}
               onToggleLayout={() => setCompactCards((current) => !current)}
+              onReset={() => {
+                setSearchValue("");
+                setStatusFilter("ALL");
+                setProviderFilter("ALL");
+                setTypeFilter("ALL");
+                setSortBy("recent");
+                setCurrentPage(1);
+              }}
               onTypeChange={(value) => {
                 setTypeFilter(value);
                 setCurrentPage(1);

@@ -12,10 +12,10 @@ type MemoryOverviewChartProps = {
 export function MemoryOverviewChart({ total, data }: MemoryOverviewChartProps) {
   return (
     <div className="space-y-3">
-      <div className="h-[190px]">
+      <div className="relative h-[190px]">
         <ResponsiveContainer height="100%" minHeight={180} minWidth={0} width="100%">
           <PieChart>
-            <Pie cx="35%" cy="50%" data={data} dataKey="value" innerRadius={48} outerRadius={72} paddingAngle={2} stroke="none">
+            <Pie cx="50%" cy="50%" data={data} dataKey="value" innerRadius={48} outerRadius={72} paddingAngle={2} stroke="none">
               {data.map((entry) => (
                 <Cell fill={entry.color} key={entry.label} />
               ))}
@@ -23,11 +23,11 @@ export function MemoryOverviewChart({ total, data }: MemoryOverviewChartProps) {
             <Tooltip contentStyle={{ background: "#071523", border: "1px solid rgba(56, 189, 248, 0.4)", borderRadius: 8 }} />
           </PieChart>
         </ResponsiveContainer>
-      </div>
 
-      <div className="-mt-[145px] ml-[18px] w-[110px] text-center">
-        <p className="text-3xl text-cyan-100">{total.toLocaleString()}</p>
-        <p className="text-xs uppercase tracking-[0.08em] text-cyan-600">Total</p>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+          <p className="text-3xl text-cyan-100">{total.toLocaleString()}</p>
+          <p className="text-xs uppercase tracking-[0.08em] text-cyan-600">Total</p>
+        </div>
       </div>
 
       <div className="space-y-2 pt-2">

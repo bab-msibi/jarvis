@@ -4,6 +4,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { AgentMenuAction } from "@/components/agents/agent-action-menu";
 import { AgentRow } from "@/components/agents/agent-row";
+import { DataTableWrapper } from "@/components/shared/data-table-wrapper";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Agent } from "@/types/agent";
 
 type AgentsTableProps = {
@@ -35,11 +37,12 @@ export function AgentsTable({
 }: AgentsTableProps) {
   const start = totalAgents ? (currentPage - 1) * pageSize + 1 : 0;
   const end = Math.min(currentPage * pageSize, totalAgents);
+  const pages = Array.from({ length: totalPages }, (_, index) => index + 1).slice(Math.max(0, currentPage - 3), currentPage + 2);
 
   return (
     <section className="panel-base rounded-2xl">
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[980px]">
+      <DataTableWrapper>
+        <table className="table-sticky-head w-full min-w-[980px]">
           <thead>
             <tr className="border-b border-cyan-900/35 text-left text-xs uppercase tracking-[0.08em] text-cyan-600">
               {tableHeaders.map((header) => (
@@ -62,7 +65,7 @@ export function AgentsTable({
             ))}
           </tbody>
         </table>
-      </div>
+      </DataTableWrapper>
 
       <div className="space-y-3 p-3 md:hidden">
         {agents.map((agent) => (
@@ -77,6 +80,12 @@ export function AgentsTable({
           />
         ))}
       </div>
+
+      {!agents.length ? (
+        <div className="px-3 pb-3">
+          <EmptyState description="Try adjusting filters or create a new agent to populate the table." title="No agents found" />
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-cyan-900/35 px-4 py-3">
         <p className="text-sm text-cyan-600">
@@ -93,7 +102,7 @@ export function AgentsTable({
             <ChevronLeft className="h-4 w-4" />
           </button>
 
-          {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+          {pages.map((pageNumber) => (
             <button
               className={`rounded-md border px-3 py-1.5 text-sm transition ${
                 pageNumber === currentPage

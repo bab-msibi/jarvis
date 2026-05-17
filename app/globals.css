@@ -8,11 +8,15 @@
 
 * {
   border-color: rgba(84, 157, 208, 0.2);
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 html,
 body {
   min-height: 100%;
+  max-width: 100%;
 }
 
 body {
@@ -21,6 +25,7 @@ body {
     radial-gradient(circle at 88% 6%, rgba(45, 126, 216, 0.1), transparent 24%),
     linear-gradient(180deg, #030913 0%, #020811 100%);
   color: #d8f6ff;
+  overflow-x: hidden;
 }
 
 .hud-grid {
@@ -39,8 +44,84 @@ body {
   box-shadow: 0 0 20px rgba(17, 121, 193, 0.18);
 }
 
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid rgba(34, 211, 238, 0.78);
+  outline-offset: 2px;
+}
+
+.page-shell {
+  width: 100%;
+  max-width: 1800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.table-scroll-region {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+}
+
+.table-sticky-head thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #051323;
+}
+
+.table-sticky-head th {
+  white-space: nowrap;
+}
+
+.table-cell-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.truncate-middle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.break-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.action-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.page-shell-tight {
+  width: 100%;
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mono-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  white-space: pre;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-thumb {

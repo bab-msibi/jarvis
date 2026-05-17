@@ -4,6 +4,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { ModelMenuAction } from "@/components/models/model-action-menu";
 import { ModelRow } from "@/components/models/model-row";
+import { DataTableWrapper } from "@/components/shared/data-table-wrapper";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Model } from "@/types/model";
 
 type ModelsTableProps = {
@@ -31,11 +33,12 @@ export function ModelsTable({
 }: ModelsTableProps) {
   const start = totalModels ? (currentPage - 1) * pageSize + 1 : 0;
   const end = Math.min(currentPage * pageSize, totalModels);
+  const pages = Array.from({ length: totalPages }, (_, index) => index + 1).slice(Math.max(0, currentPage - 3), currentPage + 2);
 
   return (
     <section className="panel-base rounded-2xl">
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[1200px]">
+      <DataTableWrapper>
+        <table className="table-sticky-head w-full min-w-[1200px]">
           <thead>
             <tr className="border-b border-cyan-900/35 text-left text-xs uppercase tracking-[0.08em] text-cyan-600">
               {headers.map((header) => (
@@ -51,13 +54,19 @@ export function ModelsTable({
             ))}
           </tbody>
         </table>
-      </div>
+      </DataTableWrapper>
 
       <div className="space-y-3 p-3 md:hidden">
         {models.map((model) => (
           <ModelRow key={model.id} mobile model={model} onManage={onManage} onMenuAction={onMenuAction} />
         ))}
       </div>
+
+      {!models.length ? (
+        <div className="px-3 pb-3">
+          <EmptyState description="No models match the selected filters right now." title="No models found" />
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-cyan-900/35 px-4 py-3">
         <p className="text-sm text-cyan-600">
@@ -74,7 +83,7 @@ export function ModelsTable({
             <ChevronLeft className="h-4 w-4" />
           </button>
 
-          {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+          {pages.map((page) => (
             <button
               className={`rounded-md border px-3 py-1.5 text-sm transition ${
                 page === currentPage

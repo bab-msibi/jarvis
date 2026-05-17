@@ -24,10 +24,12 @@ export function ModelRow({ model, mobile, onManage, onMenuAction }: ModelRowProp
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <ProviderIcon provider={model.provider} />
-              <p className="truncate text-base text-cyan-100">{model.name}</p>
+              <p className="truncate text-base text-cyan-100" title={model.name}>
+                {model.name}
+              </p>
             </div>
             <p className="text-xs text-cyan-600">
-              {model.provider} • v{model.version} • {model.contextWindow}
+              {model.provider} | v{model.version} | {model.contextWindow}
             </p>
           </div>
           <ModelStatusBadge status={model.status} />
@@ -68,11 +70,13 @@ export function ModelRow({ model, mobile, onManage, onMenuAction }: ModelRowProp
   return (
     <tr className="border-b border-cyan-900/25 text-sm transition hover:bg-cyan-500/5">
       <td className="px-4 py-3">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <ProviderIcon provider={model.provider} />
-          <div>
-            <p className="text-cyan-100">{model.name}</p>
-            <p className="text-xs text-cyan-700">{model.description}</p>
+          <div className="min-w-0">
+            <p className="truncate text-cyan-100" title={model.name}>
+              {model.name}
+            </p>
+            <p className="line-clamp-2 text-xs text-cyan-700">{model.description}</p>
           </div>
         </div>
       </td>
@@ -98,6 +102,7 @@ export function ModelRow({ model, mobile, onManage, onMenuAction }: ModelRowProp
       <td className="px-3 py-3">
         <div className="flex items-center justify-end gap-2">
           <button
+            aria-label={`Manage ${model.name}`}
             className="rounded-md border border-cyan-900/35 bg-sky-950/60 p-2 text-cyan-300 transition hover:border-cyan-500/50 hover:text-cyan-100"
             onClick={() => onManage(model)}
             type="button"

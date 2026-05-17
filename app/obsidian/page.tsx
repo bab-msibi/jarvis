@@ -33,6 +33,8 @@ import { ObsidianTabs } from "@/components/obsidian/obsidian-tabs";
 import { QuickActionCard } from "@/components/obsidian/quick-action-card";
 import { VaultStructureTree } from "@/components/obsidian/vault-structure-tree";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { ActionButtonGroup } from "@/components/shared/action-button-group";
+import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
 import { obsidianData, obsidianStats } from "@/lib/mock/obsidian";
@@ -290,15 +292,11 @@ export default function ObsidianPage() {
 
   return (
     <DashboardLayout system={systemStats}>
-      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
-          <section className="panel-base rounded-2xl p-5 sm:p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h1 className="text-3xl text-cyan-100">Obsidian Integration</h1>
-                <p className="mt-1 text-cyan-600">Manage your Obsidian vault, notes, knowledge graph and AI knowledge synchronization.</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
+          <PageHeader
+            actions={
+              <ActionButtonGroup>
                 <button
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-cyan-500/55 bg-cyan-500/20 px-4 text-sm text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-500/30"
                   onClick={() => openModal("sync")}
@@ -320,9 +318,11 @@ export default function ObsidianPage() {
                   + Open in Obsidian
                   <SquareArrowOutUpRight className="h-3.5 w-3.5" />
                 </button>
-              </div>
-            </div>
-          </section>
+              </ActionButtonGroup>
+            }
+            subtitle="Manage your Obsidian vault, notes, knowledge graph and AI knowledge synchronization."
+            title="Obsidian Integration"
+          />
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
             <StatsCard description="All notes in vault" icon={FileText} label="Total Notes" tone="cyan" value={obsidianStats.notes.toLocaleString()} />
@@ -367,6 +367,14 @@ export default function ObsidianPage() {
                   setCurrentPage(1);
                 }}
                 onViewModeChange={setViewMode}
+                onReset={() => {
+                  setSearchValue("");
+                  setFolderFilter("ALL");
+                  setTagFilter("ALL");
+                  setNoteTypeFilter("ALL");
+                  setSortBy("updated_newest");
+                  setCurrentPage(1);
+                }}
                 searchValue={searchValue}
                 sortBy={sortBy}
                 tagFilter={tagFilter}

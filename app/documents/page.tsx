@@ -34,6 +34,8 @@ import { TopCategoriesPanel } from "@/components/documents/top-categories-panel"
 import { UploadDocumentInput, UploadDocumentModal } from "@/components/documents/upload-document-modal";
 import { UploadedByPanel } from "@/components/documents/uploaded-by-panel";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { ActionButtonGroup } from "@/components/shared/action-button-group";
+import { PageHeader } from "@/components/shared/page-header";
 import { ProgressBar } from "@/components/shared/ProgressBar";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
@@ -317,16 +319,11 @@ export default function DocumentsPage() {
 
   return (
     <DashboardLayout system={systemStats}>
-      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
-          <section className="panel-base rounded-2xl p-5 sm:p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h1 className="text-3xl text-cyan-100">Documents</h1>
-                <p className="mt-1 text-cyan-600">Store, organize and manage all your important documents and files.</p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
+          <PageHeader
+            actions={
+              <ActionButtonGroup>
                 <button
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-cyan-500/55 bg-cyan-500/20 px-4 text-sm text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-500/30"
                   onClick={() => openModal("upload")}
@@ -351,9 +348,11 @@ export default function DocumentsPage() {
                   <ScanSearch className="h-4 w-4" />
                   Scan & Index
                 </button>
-              </div>
-            </div>
-          </section>
+              </ActionButtonGroup>
+            }
+            subtitle="Store, organize and manage all your important documents and files."
+            title="Documents"
+          />
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
             <StatsCard description="All documents" icon={Files} label="Total Documents" tone="cyan" value={documentsData.totals.documents.toLocaleString()} />

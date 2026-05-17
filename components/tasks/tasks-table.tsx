@@ -10,6 +10,8 @@ import { TaskProgressBar } from "@/components/tasks/task-progress-bar";
 import { TaskRow } from "@/components/tasks/task-row";
 import { TaskStatusBadge } from "@/components/tasks/task-status-badge";
 import { formatDateTime, getInitials, TaskIcon } from "@/components/tasks/task-utils";
+import { DataTableWrapper } from "@/components/shared/data-table-wrapper";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Task } from "@/types/task";
 
 type TasksTableProps = {
@@ -48,7 +50,7 @@ export function TasksTable({
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate text-cyan-100 group-hover:text-cyan-50">{task.name}</span>
-                  <span className="block text-xs text-cyan-700">{task.description}</span>
+                  <span className="block line-clamp-2 text-xs text-cyan-700">{task.description}</span>
                 </span>
               </button>
               <TaskActionMenu onAction={(action) => onMenuAction(task, action)} />
@@ -122,11 +124,12 @@ export function TasksTable({
 
   const start = totalTasks ? (currentPage - 1) * pageSize + 1 : 0;
   const end = Math.min(currentPage * pageSize, totalTasks);
+  const pages = Array.from({ length: totalPages }, (_, index) => index + 1).slice(Math.max(0, currentPage - 3), currentPage + 2);
 
   return (
     <section className="panel-base rounded-2xl">
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[1240px]">
+      <DataTableWrapper>
+        <table className="table-sticky-head w-full min-w-[1240px]">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr className="border-b border-cyan-900/35 text-left text-xs uppercase tracking-[0.08em] text-cyan-600" key={headerGroup.id}>
@@ -150,13 +153,19 @@ export function TasksTable({
             ))}
           </tbody>
         </table>
-      </div>
+      </DataTableWrapper>
 
       <div className="space-y-3 p-3 md:hidden">
         {tasks.map((task) => (
           <TaskRow key={task.id} mobile onMenuAction={onMenuAction} onOpenDetails={onOpenDetails} task={task} />
         ))}
       </div>
+
+      {!tasks.length ? (
+        <div className="px-3 pb-3">
+          <EmptyState description="No tasks match these filters. Reset filters or create a new task." title="No tasks found" />
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-cyan-900/35 px-4 py-3">
         <p className="text-sm text-cyan-600">
@@ -173,7 +182,7 @@ export function TasksTable({
             <ChevronLeft className="h-4 w-4" />
           </button>
 
-          {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+          {pages.map((page) => (
             <button
               className={`rounded-md border px-3 py-1.5 text-sm transition ${
                 page === currentPage
