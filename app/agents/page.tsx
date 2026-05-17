@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   Bot,
@@ -29,10 +30,11 @@ import { StatsCard } from "@/components/agents/stats-card";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { PageHeader } from "@/components/shared/page-header";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
-import { agents as baseAgents } from "@/lib/mock/agents";
-import { brains } from "@/lib/mock/brains";
-import { models } from "@/lib/mock/models";
-import { systemStats } from "@/lib/mock/system";
+import { fetchDataResource } from "@/lib/api-client";
+import { agents as baseAgents } from "@/lib/data/agents";
+import { brains } from "@/lib/data/brains";
+import { models } from "@/lib/data/models";
+import { systemServices, systemStats } from "@/lib/data/system";
 import { Agent, AgentStatus } from "@/types/agent";
 
 const pageSize = 8;
@@ -108,6 +110,10 @@ const quickActions = [
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>(() => baseAgents);
+  const agentsQuery = useQuery({ queryKey: ["data", "agents"], queryFn: () => fetchDataResource("agents", baseAgents) });
+  const modelsQuery = useQuery({ queryKey: ["data", "models"], queryFn: () => fetchDataResource("models", models) });
+  const brainsQuery = useQuery({ queryKey: ["data", "brains"], queryFn: () => fetchDataResource("brains", brains) });
+  const systemQuery = useQuery({ queryKey: ["data", "system"], queryFn: () => fetchDataResource("system", { stats: systemStats, services: systemServices }) });
   const [searchValue, setSearchValue] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | AgentStatus>("ALL");
   const [roleFilter, setRoleFilter] = useState("ALL");
@@ -115,6 +121,10 @@ export default function AgentsPage() {
   const [activeModal, setActiveModal] = useState<null | "chat" | "create" | "edit" | "assign" | "delete" | "reassign">(null);
   const [selectedAgent, setSelectedAgent] = useState<Agent | undefined>();
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  useEffect(() => {
+    if (agentsQuery.data?.data) queueMicrotask(() => setAgents(agentsQuery.data.data));
+  }, [agentsQuery.data]);
 
   const pushToast = useCallback((payload: Omit<ToastItem, "id">) => {
     const id = crypto.randomUUID();
@@ -125,8 +135,8 @@ export default function AgentsPage() {
   }, []);
 
   const roleOptions = useMemo(() => Array.from(new Set(agents.map((agent) => agent.role))), [agents]);
-  const modelOptions = useMemo(() => models.map((model) => model.name), []);
-  const brainOptions = useMemo(() => brains.map((brain) => brain.name), []);
+  const modelOptions = useMemo(() => (modelsQuery.data?.data ?? models).map((model) => model.name), [modelsQuery.data]);
+  const brainOptions = useMemo(() => (brainsQuery.data?.data ?? brains).map((brain) => brain.name), [brainsQuery.data]);
 
   const filteredAgents = useMemo(() => {
     return agents.filter((agent) => {
@@ -301,7 +311,7 @@ export default function AgentsPage() {
   };
 
   return (
-    <DashboardLayout system={systemStats}>
+    <DashboardLayout system={systemQuery.data?.data.stats ?? systemStats}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
           <PageHeader subtitle="Manage and monitor all AI agents running on your system." title="Agents" />

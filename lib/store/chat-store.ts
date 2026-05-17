@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 
-import { chatMockData } from "@/lib/mock/chat";
+import { chatMockData } from "@/lib/data/chat";
 import { ChatAgent, ChatBootstrapData, ChatMessage, ChatMessageType, ChatModel, ChatSession } from "@/types/chat";
 
 type CreateSessionOptions = {

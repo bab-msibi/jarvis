@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   BrainCircuit,
   CalendarDays,
@@ -37,8 +38,9 @@ import { ActionButtonGroup } from "@/components/shared/action-button-group";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
-import { obsidianData, obsidianStats } from "@/lib/mock/obsidian";
-import { systemStats } from "@/lib/mock/system";
+import { fetchDataResource } from "@/lib/api-client";
+import { obsidianData, obsidianStats } from "@/lib/data/obsidian";
+import { systemServices, systemStats } from "@/lib/data/system";
 import { useObsidianStore } from "@/lib/store/obsidian-store";
 import { NoteType, ObsidianNote, ObsidianTab, VaultFolder } from "@/types/obsidian";
 
@@ -111,6 +113,8 @@ function sortNotes(notes: ObsidianNote[], sortBy: NotesSortOption) {
 
 export default function ObsidianPage() {
   const [notes, setNotes] = useState<ObsidianNote[]>(() => obsidianData.notes);
+  const obsidianQuery = useQuery({ queryKey: ["data", "obsidian"], queryFn: () => fetchDataResource("obsidian", { ...obsidianData, stats: obsidianStats }) });
+  const systemQuery = useQuery({ queryKey: ["data", "system"], queryFn: () => fetchDataResource("system", { stats: systemStats, services: systemServices }) });
   const [searchValue, setSearchValue] = useState("");
   const [folderFilter, setFolderFilter] = useState("ALL");
   const [tagFilter, setTagFilter] = useState("ALL");
@@ -128,6 +132,22 @@ export default function ObsidianPage() {
     syncStatus: obsidianStats.syncStatus as "synced" | "syncing" | "error"
   });
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  useEffect(() => {
+    if (!obsidianQuery.data?.data.notes) return;
+    queueMicrotask(() => {
+      setNotes(obsidianQuery.data.data.notes);
+      setVaultState({
+        vaultName: obsidianQuery.data.data.vaultName,
+        vaultPath: obsidianQuery.data.data.vaultPath,
+        lastSync: obsidianQuery.data.data.stats.lastSync,
+        syncStatus: obsidianQuery.data.data.stats.syncStatus as "synced" | "syncing" | "error"
+      });
+    });
+  }, [obsidianQuery.data]);
+
+  const liveObsidianData = obsidianQuery.data?.data ?? { ...obsidianData, stats: obsidianStats };
+  const liveObsidianStats = liveObsidianData.stats;
 
   const activeTab = useObsidianStore((state) => state.activeTab);
   const setActiveTab = useObsidianStore((state) => state.setActiveTab);
@@ -148,8 +168,8 @@ export default function ObsidianPage() {
     }, 3200);
   }, []);
 
-  const foldersFlat = useMemo(() => flattenFolders(obsidianData.folders).filter((folder) => folder.id !== "root"), []);
-  const folderMap = useMemo(() => folderIdMap(obsidianData.folders), []);
+  const foldersFlat = useMemo(() => flattenFolders(liveObsidianData.folders).filter((folder) => folder.id !== "root"), [liveObsidianData.folders]);
+  const folderMap = useMemo(() => folderIdMap(liveObsidianData.folders), [liveObsidianData.folders]);
   const folderOptions = useMemo(() => foldersFlat.map((folder) => folder.name), [foldersFlat]);
 
   const filteredNotes = useMemo(() => {
@@ -291,7 +311,7 @@ export default function ObsidianPage() {
   };
 
   return (
-    <DashboardLayout system={systemStats}>
+    <DashboardLayout system={systemQuery.data?.data.stats ?? systemStats}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
           <PageHeader
@@ -325,12 +345,12 @@ export default function ObsidianPage() {
           />
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-            <StatsCard description="All notes in vault" icon={FileText} label="Total Notes" tone="cyan" value={obsidianStats.notes.toLocaleString()} />
-            <StatsCard description="This month" icon={CalendarDays} label="Daily Notes" tone="green" value={obsidianData.dailyNotesCount.toLocaleString()} />
-            <StatsCard description="Active brains" icon={BrainCircuit} label="Linked to Brains" tone="amber" value={obsidianData.linkedBrainsCount} />
-            <StatsCard description="Total backlinks" icon={Link2} label="Backlinks" tone="slate" value={obsidianStats.links.toLocaleString()} />
+            <StatsCard description="All notes in vault" icon={FileText} label="Total Notes" tone="cyan" value={liveObsidianStats.notes.toLocaleString()} />
+            <StatsCard description="This month" icon={CalendarDays} label="Daily Notes" tone="green" value={liveObsidianData.dailyNotesCount.toLocaleString()} />
+            <StatsCard description="Active brains" icon={BrainCircuit} label="Linked to Brains" tone="amber" value={liveObsidianData.linkedBrainsCount} />
+            <StatsCard description="Total backlinks" icon={Link2} label="Backlinks" tone="slate" value={liveObsidianStats.links.toLocaleString()} />
             <StatsCard description="Knowledge nodes" icon={Network} label="Graph Nodes" tone="cyan" value="5,672" />
-            <StatsCard description="Files in vault" icon={Paperclip} label="Attachments" tone="rose" value={obsidianData.attachmentsCount.toLocaleString()} />
+            <StatsCard description="Files in vault" icon={Paperclip} label="Attachments" tone="rose" value={liveObsidianData.attachmentsCount.toLocaleString()} />
           </section>
 
           <section className="panel-base rounded-2xl">
@@ -378,7 +398,7 @@ export default function ObsidianPage() {
                 searchValue={searchValue}
                 sortBy={sortBy}
                 tagFilter={tagFilter}
-                tagOptions={obsidianData.tags}
+                tagOptions={liveObsidianData.tags}
                 viewMode={viewMode}
               />
             </div>
@@ -387,7 +407,7 @@ export default function ObsidianPage() {
           <section className="grid gap-3 xl:grid-cols-[300px_minmax(0,1fr)]">
             <VaultStructureTree
               expandedFolderIds={expandedFolderIds}
-              folders={obsidianData.folders}
+              folders={liveObsidianData.folders}
               onSelectFolder={(folderId) => {
                 setSelectedFolderId(folderId === selectedFolderId ? null : folderId);
                 setCurrentPage(1);
@@ -413,7 +433,7 @@ export default function ObsidianPage() {
                 setCurrentPage(1);
               }}
               pageSize={pageSize}
-              totalDisplayCount={obsidianStats.notes}
+              totalDisplayCount={liveObsidianStats.notes}
               totalNotes={filteredNotes.length}
               totalPages={totalPages}
               viewMode={viewMode}
@@ -421,8 +441,8 @@ export default function ObsidianPage() {
           </section>
 
           <KnowledgeGraphPreview
-            edges={obsidianData.graphEdges.map((edge) => ({ ...edge, type: "graphConnection" }))}
-            nodes={obsidianData.graphNodes}
+            edges={liveObsidianData.graphEdges.map((edge) => ({ ...edge, type: "graphConnection" }))}
+            nodes={liveObsidianData.graphNodes}
             onOpenFullGraph={() =>
               pushToast({
                 title: "Full graph preview ready",
@@ -450,11 +470,11 @@ export default function ObsidianPage() {
 
         <aside className="space-y-4">
           <SidebarPanel title="Vault Overview">
-            <VaultOverviewChart distribution={obsidianData.vaultDistribution} totalNotes={obsidianStats.notes} />
+            <VaultOverviewChart distribution={liveObsidianData.vaultDistribution} totalNotes={liveObsidianStats.notes} />
           </SidebarPanel>
 
           <SidebarPanel title="Top Tags">
-            <TopTagsPanel tags={obsidianData.tags} />
+            <TopTagsPanel tags={liveObsidianData.tags} />
           </SidebarPanel>
 
           <SidebarPanel title="Quick Actions">

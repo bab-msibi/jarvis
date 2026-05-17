@@ -101,8 +101,8 @@ export const chatModels: ChatModel[] = [
     contextWindow: "1M"
   },
   {
-    id: "model-llama-3-70b",
-    name: "Llama 3 70B",
+    id: "model-llama-31-70b",
+    name: "Llama 3.1 70B",
     provider: "Meta",
     status: "ACTIVE",
     description: "Open model for local-friendly high reasoning loads.",
@@ -115,6 +115,14 @@ export const chatModels: ChatModel[] = [
     status: "IDLE",
     description: "Cost-optimized fallback for broad assistant workloads.",
     contextWindow: "128K"
+  },
+  {
+    id: "model-local-ollama",
+    name: "Local Ollama Model",
+    provider: "Ollama",
+    status: "ACTIVE",
+    description: "Local private inference through the Mac Mini M4 Ollama runtime.",
+    contextWindow: "32K"
   }
 ];
 
@@ -162,7 +170,7 @@ export const chatSessions: ChatSession[] = [
     id: "session-ops-1",
     title: "Deployment Incident Notes",
     agentId: "agent-ops",
-    modelId: "model-llama-3-70b",
+    modelId: "model-llama-31-70b",
     status: "ARCHIVED",
     startedAt: "May 23, 2024 06:20 PM",
     updatedAt: "1d ago",

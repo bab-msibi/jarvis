@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   Clock3,
@@ -38,8 +39,9 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { ActionButtonGroup } from "@/components/shared/action-button-group";
 import { PageHeader } from "@/components/shared/page-header";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
-import { monitorData } from "@/lib/mock/monitor";
-import { systemStats } from "@/lib/mock/system";
+import { fetchDataResource } from "@/lib/api-client";
+import { monitorData } from "@/lib/data/monitor";
+import { systemServices, systemStats } from "@/lib/data/system";
 import { useMonitorStore } from "@/lib/store/monitor-store";
 import { AgentPerformance, Incident, MonitorLog, MonitorService, MonitorStatus, ServiceStatus, SystemMetric } from "@/types/monitor";
 
@@ -94,11 +96,24 @@ export default function MonitorPage() {
   const router = useRouter();
   const [metrics, setMetrics] = useState<SystemMetric[]>(() => monitorData.metrics);
   const [services, setServices] = useState<MonitorService[]>(() => monitorData.services);
-  const [agents] = useState<AgentPerformance[]>(() => monitorData.agents);
+  const [agents, setAgents] = useState<AgentPerformance[]>(() => monitorData.agents);
   const [logs, setLogs] = useState<MonitorLog[]>(() => monitorData.logs);
   const [incidents, setIncidents] = useState<Incident[]>(() => monitorData.incidents);
+  const monitorQuery = useQuery({ queryKey: ["data", "monitor"], queryFn: () => fetchDataResource("monitor", monitorData) });
+  const systemQuery = useQuery({ queryKey: ["data", "system"], queryFn: () => fetchDataResource("system", { stats: systemStats, services: systemServices }) });
   const [activeModal, setActiveModal] = useState<ModalState>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  useEffect(() => {
+    if (!monitorQuery.data?.data) return;
+    queueMicrotask(() => {
+      setMetrics(monitorQuery.data.data.metrics);
+      setServices(monitorQuery.data.data.services);
+      setAgents(monitorQuery.data.data.agents);
+      setLogs(monitorQuery.data.data.logs);
+      setIncidents(monitorQuery.data.data.incidents);
+    });
+  }, [monitorQuery.data]);
 
   const autoRefreshEnabled = useMonitorStore((state) => state.autoRefreshEnabled);
   const setAutoRefreshEnabled = useMonitorStore((state) => state.setAutoRefreshEnabled);
@@ -317,7 +332,7 @@ export default function MonitorPage() {
   const systemHealthTone = stats.systemHealth === "Critical" ? "rose" : stats.systemHealth === "Warning" ? "amber" : "green";
 
   return (
-    <DashboardLayout system={systemStats}>
+    <DashboardLayout system={systemQuery.data?.data.stats ?? systemStats}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
           <PageHeader

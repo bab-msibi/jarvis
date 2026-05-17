@@ -1,9 +1,9 @@
-import { agents } from "@/lib/mock/agents";
-import { brains } from "@/lib/mock/brains";
-import { models } from "@/lib/mock/models";
-import { obsidianStats } from "@/lib/mock/obsidian";
-import { systemStats } from "@/lib/mock/system";
-import { tasks } from "@/lib/mock/tasks";
+import { agents } from "@/lib/data/agents";
+import { brains } from "@/lib/data/brains";
+import { models } from "@/lib/data/models";
+import { obsidianStats } from "@/lib/data/obsidian";
+import { systemStats } from "@/lib/data/system";
+import { tasks } from "@/lib/data/tasks";
 
 export type DashboardData = {
   agents: typeof agents;

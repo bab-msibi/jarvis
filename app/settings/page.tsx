@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import { Control, Controller, FieldErrors, Path, UseFormRegister, useForm } from "react-hook-form";
 import {
   Download,
@@ -39,9 +40,10 @@ import { ActionButtonGroup } from "@/components/shared/action-button-group";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
-import { settingsCategories, settingsDefaults, settingsHealthItems, settingsSystemProfile } from "@/lib/mock/settings";
+import { fetchDataResource } from "@/lib/api-client";
+import { settingsCategories, settingsDefaults, settingsHealthItems, settingsSystemProfile } from "@/lib/data/settings";
 import { settingsSchema, SettingsSchemaValues } from "@/lib/schemas/settings";
-import { systemStats } from "@/lib/mock/system";
+import { systemServices, systemStats } from "@/lib/data/system";
 import { useSettingsStore } from "@/lib/store/settings-store";
 import { JarvisSettings, SettingsFieldConfig } from "@/types/settings";
 
@@ -88,6 +90,13 @@ export default function SettingsPage() {
   const [activeModal, setActiveModal] = useState<ModalState>(null);
   const [pendingSaveValues, setPendingSaveValues] = useState<JarvisSettings | null>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const settingsQuery = useQuery({
+    queryKey: ["data", "settings"],
+    queryFn: () => fetchDataResource("settings", { categories: settingsCategories, defaults: settingsDefaults, healthItems: settingsHealthItems, systemProfile: settingsSystemProfile })
+  });
+  const systemQuery = useQuery({ queryKey: ["data", "system"], queryFn: () => fetchDataResource("system", { stats: systemStats, services: systemServices }) });
+
+  const liveSettingsData = settingsQuery.data?.data ?? { categories: settingsCategories, defaults: settingsDefaults, healthItems: settingsHealthItems, systemProfile: settingsSystemProfile };
 
   const {
     register,
@@ -119,11 +128,11 @@ export default function SettingsPage() {
     return () => subscription.unsubscribe();
   }, [setDraftSettings, watch]);
 
-  const categoryNavItems = useMemo(() => settingsCategories.map((category) => ({ key: category.key, label: category.label })), []);
+  const categoryNavItems = useMemo(() => liveSettingsData.categories.map((category) => ({ key: category.key, label: category.label })), [liveSettingsData.categories]);
 
   const activeCategory = useMemo(
-    () => settingsCategories.find((category) => category.key === selectedCategory) ?? settingsCategories[0],
-    [selectedCategory]
+    () => liveSettingsData.categories.find((category) => category.key === selectedCategory) ?? liveSettingsData.categories[0],
+    [liveSettingsData.categories, selectedCategory]
   );
 
   const openModal = (modal: ModalState) => setActiveModal(modal);
@@ -184,7 +193,7 @@ export default function SettingsPage() {
   };
 
   const handleFactoryReset = () => {
-    reset(settingsDefaults);
+    reset(liveSettingsData.defaults);
     resetToDefaults();
     pushToast({ title: "Factory reset complete", description: "Settings restored to defaults.", tone: "warning" });
   };
@@ -209,7 +218,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <DashboardLayout system={systemStats}>
+    <DashboardLayout system={systemQuery.data?.data.stats ?? systemStats}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
           <PageHeader
@@ -301,11 +310,11 @@ export default function SettingsPage() {
 
         <aside className="space-y-4">
           <SidebarPanel title="System Profile">
-            <SystemProfilePanel profile={settingsSystemProfile} />
+            <SystemProfilePanel profile={liveSettingsData.systemProfile} />
           </SidebarPanel>
 
           <SidebarPanel title="Configuration Health">
-            <ConfigHealthPanel items={settingsHealthItems} />
+            <ConfigHealthPanel items={liveSettingsData.healthItems} />
           </SidebarPanel>
 
           <SidebarPanel title="Quick Actions">

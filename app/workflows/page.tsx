@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   CalendarClock,
@@ -34,9 +35,10 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { ActionButtonGroup } from "@/components/shared/action-button-group";
 import { PageHeader } from "@/components/shared/page-header";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
-import { workflowNodeConfigs } from "@/lib/mock/workflow-nodes";
-import { workflows as baseWorkflows } from "@/lib/mock/workflows";
-import { systemStats } from "@/lib/mock/system";
+import { fetchDataResource } from "@/lib/api-client";
+import { workflowNodeConfigs } from "@/lib/data/workflow-nodes";
+import { workflows as baseWorkflows } from "@/lib/data/workflows";
+import { systemServices, systemStats } from "@/lib/data/system";
 import { useWorkflowBuilderStore } from "@/lib/store/workflow-builder-store";
 import { Workflow, WorkflowStatus, WorkflowTrigger } from "@/types/workflow";
 
@@ -121,8 +123,8 @@ function buildWorkflowFromInput(values: CreateWorkflowInput): Workflow {
   };
 }
 
-function cloneConfig(workflowId: string) {
-  const target = workflowNodeConfigs.find((config) => config.workflowId === workflowId) ?? workflowNodeConfigs[0];
+function cloneConfig(workflowId: string, configs = workflowNodeConfigs) {
+  const target = configs.find((config) => config.workflowId === workflowId) ?? configs[0];
   if (!target) return null;
   return {
     workflowId,
@@ -133,6 +135,8 @@ function cloneConfig(workflowId: string) {
 
 export default function WorkflowsPage() {
   const [workflows, setWorkflows] = useState<Workflow[]>(() => baseWorkflows);
+  const workflowsQuery = useQuery({ queryKey: ["data", "workflows"], queryFn: () => fetchDataResource("workflows", { items: baseWorkflows, nodeConfigs: workflowNodeConfigs }) });
+  const systemQuery = useQuery({ queryKey: ["data", "system"], queryFn: () => fetchDataResource("system", { stats: systemStats, services: systemServices }) });
   const [searchValue, setSearchValue] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | WorkflowStatus>("ALL");
   const [triggerFilter, setTriggerFilter] = useState<"ALL" | WorkflowTrigger>("ALL");
@@ -145,6 +149,12 @@ export default function WorkflowsPage() {
   const [activeModal, setActiveModal] = useState<null | "create" | "edit" | "run" | "import" | "template" | "delete" | "trigger">(null);
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | undefined>();
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  useEffect(() => {
+    if (workflowsQuery.data?.data.items) queueMicrotask(() => setWorkflows(workflowsQuery.data.data.items));
+  }, [workflowsQuery.data]);
+
+  const liveWorkflowNodeConfigs = workflowsQuery.data?.data.nodeConfigs ?? workflowNodeConfigs;
 
   const selectedWorkflowId = useWorkflowBuilderStore((state) => state.selectedWorkflowId);
   const setSelectedWorkflowId = useWorkflowBuilderStore((state) => state.setSelectedWorkflowId);
@@ -228,11 +238,11 @@ export default function WorkflowsPage() {
       setSelectedWorkflowId(targetId);
     }
 
-    const graph = cloneConfig(targetId);
+    const graph = cloneConfig(targetId, liveWorkflowNodeConfigs);
     if (!graph) return;
 
     setWorkflowGraph(targetId, graph.nodes, graph.edges);
-  }, [selectedWorkflowId, setSelectedWorkflowId, setWorkflowGraph, workflows]);
+  }, [liveWorkflowNodeConfigs, selectedWorkflowId, setSelectedWorkflowId, setWorkflowGraph, workflows]);
 
   const openModal = (modal: "create" | "edit" | "run" | "import" | "template" | "delete" | "trigger", workflow?: Workflow) => {
     setSelectedWorkflow(workflow);
@@ -366,7 +376,7 @@ export default function WorkflowsPage() {
   };
 
   return (
-    <DashboardLayout system={systemStats}>
+    <DashboardLayout system={systemQuery.data?.data.stats ?? systemStats}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
           <PageHeader

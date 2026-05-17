@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   AlertTriangle,
@@ -32,8 +33,9 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { ActionButtonGroup } from "@/components/shared/action-button-group";
 import { PageHeader } from "@/components/shared/page-header";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
-import { terminalData } from "@/lib/mock/terminal";
-import { systemStats } from "@/lib/mock/system";
+import { fetchDataResource } from "@/lib/api-client";
+import { terminalData } from "@/lib/data/terminal";
+import { systemServices, systemStats } from "@/lib/data/system";
 import { useTerminalStore } from "@/lib/store/terminal-store";
 import { TerminalCommandHistoryItem, TerminalService, TerminalSession, TerminalSessionStatus } from "@/types/terminal";
 
@@ -44,8 +46,6 @@ type PendingCommand = {
   command: string;
 };
 
-const blockedCommandPattern = /(rm\s+-rf|shutdown|reboot|mkfs|del\s+\/f|format\s+c:|:\(\)\{:\|:&\};:)/i;
-
 function nowLabel() {
   return "just now";
 }
@@ -54,18 +54,27 @@ function normalizeCommand(input: string) {
   return input.trim();
 }
 
-function isFailedMockCommand(command: string) {
-  return /restart-agent\s+developer/i.test(command) || /fail/i.test(command);
-}
-
 export default function TerminalPage() {
   const [sessions, setSessions] = useState<TerminalSession[]>(() => terminalData.sessions);
   const [services, setServices] = useState<TerminalService[]>(() => terminalData.services);
   const [commandHistory, setCommandHistory] = useState<TerminalCommandHistoryItem[]>(() => terminalData.commandHistory);
+  const terminalQuery = useQuery({ queryKey: ["data", "terminal"], queryFn: () => fetchDataResource("terminal", terminalData) });
+  const systemQuery = useQuery({ queryKey: ["data", "system"], queryFn: () => fetchDataResource("system", { stats: systemStats, services: systemServices }) });
   const [activeModal, setActiveModal] = useState<ModalState>(null);
   const [pendingCommand, setPendingCommand] = useState<PendingCommand | null>(null);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  useEffect(() => {
+    if (!terminalQuery.data?.data) return;
+    queueMicrotask(() => {
+      setSessions(terminalQuery.data.data.sessions);
+      setServices(terminalQuery.data.data.services);
+      setCommandHistory(terminalQuery.data.data.commandHistory);
+    });
+  }, [terminalQuery.data]);
+
+  const liveTerminalData = terminalQuery.data?.data ?? terminalData;
 
   const activeSessionId = useTerminalStore((state) => state.activeSessionId);
   const setActiveSessionId = useTerminalStore((state) => state.setActiveSessionId);
@@ -99,71 +108,64 @@ export default function TerminalPage() {
       aiServices,
       commandsToday: commandHistory.length,
       failedCommands,
-      systemUptime: terminalData.stats.systemUptime
+      systemUptime: liveTerminalData.stats.systemUptime
     };
-  }, [commandHistory, services, sessions]);
+  }, [commandHistory, liveTerminalData.stats.systemUptime, services, sessions]);
 
   const openModal = (modal: ModalState) => setActiveModal(modal);
   const closeModal = () => setActiveModal(null);
 
-  const executeMockCommand = useCallback(() => {
+  const executeBackendConfirmedCommand = useCallback(() => {
     if (!pendingCommand) return;
 
     const command = normalizeCommand(pendingCommand.command);
     const session = sessions.find((item) => item.id === pendingCommand.sessionId);
     if (!command || !session) return;
 
-    // TODO(backend): replace mocked execution with secured server API endpoint.
-    // TODO(security): enforce allow/block list + approval policies + audit logging server-side before real command execution.
-    const blocked = blockedCommandPattern.test(command);
-    const failed = !blocked && isFailedMockCommand(command);
+    fetch("/api/terminal/execute", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ command, confirmed: true, sessionId: session.id, sessionName: session.name })
+    })
+      .then(async (response) => {
+        const result = await response.json() as { historyItem: TerminalCommandHistoryItem; output: string; allowed: boolean; reason?: string };
+        const blocked = !result.allowed;
+        const failed = result.historyItem.status === "FAILED";
 
-    const status: TerminalCommandHistoryItem["status"] = blocked ? "BLOCKED" : failed ? "FAILED" : "SUCCESS";
-    const outputLine = blocked
-      ? `Command blocked by security policy: ${command}`
-      : failed
-        ? `Mock command failed: ${command}`
-        : `Mock command completed: ${command}`;
+        setCommandHistory((current) => [result.historyItem, ...current]);
+        setSessions((current) =>
+          current.map((item) => {
+            if (item.id !== session.id) return item;
 
-    setCommandHistory((current) => [
-      {
-        id: `cmd-${Date.now().toString(36)}`,
-        command,
-        sessionId: session.id,
-        sessionName: session.name,
-        status,
-        executedAt: nowLabel()
-      },
-      ...current
-    ]);
+            const nextStatus: TerminalSessionStatus = blocked ? "ERROR" : failed ? "ERROR" : "RUNNING";
+            return {
+              ...item,
+              currentCommand: command,
+              status: nextStatus,
+              cpuUsage: Math.min(100, Math.max(item.cpuUsage, failed ? item.cpuUsage : item.cpuUsage + 2)),
+              ramUsage: Math.min(100, Math.max(item.ramUsage, failed ? item.ramUsage : item.ramUsage + 1)),
+              logs: [...item.logs, `$ ${command}`, result.output]
+            };
+          })
+        );
 
-    setSessions((current) =>
-      current.map((item) => {
-        if (item.id !== session.id) return item;
-
-        const nextStatus: TerminalSessionStatus = blocked ? "ERROR" : failed ? "ERROR" : "RUNNING";
-        return {
-          ...item,
-          currentCommand: command,
-          status: nextStatus,
-          cpuUsage: Math.min(100, Math.max(item.cpuUsage, failed ? item.cpuUsage : item.cpuUsage + 2)),
-          ramUsage: Math.min(100, Math.max(item.ramUsage, failed ? item.ramUsage : item.ramUsage + 1)),
-          logs: [...item.logs, `$ ${command}`, outputLine]
-        };
+        if (blocked) {
+          pushToast({ title: "Command blocked", description: result.reason ?? "Backend policy blocked this command.", tone: "warning" });
+        } else if (failed) {
+          pushToast({ title: "Command failed", description: "Backend execution returned a failure state.", tone: "error" });
+        } else {
+          pushToast({ title: "Command accepted", description: `Backend confirmed safe command for ${session.name}.`, tone: "success" });
+        }
       })
-    );
-
-    setPendingCommand(null);
-    setCommandInput("");
-    setActiveSessionId(session.id);
-
-    if (blocked) {
-      pushToast({ title: "Command blocked", description: "Dangerous command was blocked by policy.", tone: "warning" });
-    } else if (failed) {
-      pushToast({ title: "Command failed", description: "Mock execution returned a failure state.", tone: "error" });
-    } else {
-      pushToast({ title: "Command executed", description: `Mock execution completed for ${session.name}.`, tone: "success" });
-    }
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : "Unknown terminal backend error";
+        pushToast({ title: "Terminal backend failed", description: message, tone: "error" });
+      })
+      .finally(() => {
+        setPendingCommand(null);
+        setCommandInput("");
+        setActiveSessionId(session.id);
+      });
   }, [pendingCommand, sessions, setCommandInput, setActiveSessionId, pushToast]);
 
   const handleRunFromInput = () => {
@@ -252,7 +254,7 @@ export default function TerminalPage() {
   const topResource = systemStats;
 
   return (
-    <DashboardLayout system={systemStats}>
+    <DashboardLayout system={systemQuery.data?.data.stats ?? systemStats}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
           <PageHeader
@@ -343,7 +345,7 @@ export default function TerminalPage() {
                 { key: "CPU", value: topResource.cpuUsage, max: 100, unit: "%" },
                 { key: "RAM", value: topResource.ramUsage, max: 100, unit: "%" },
                 { key: "SSD", value: topResource.ssdUsage, max: 100, unit: "%" },
-                { key: "Network", value: terminalData.resourceUsage.find((metric) => metric.key === "Network")?.value ?? 24, max: 100, unit: "%" },
+                { key: "Network", value: liveTerminalData.resourceUsage.find((metric) => metric.key === "Network")?.value ?? 24, max: 100, unit: "%" },
                 { key: "Temperature", value: topResource.temperature, max: 100, unit: "C" }
               ]}
             />
@@ -351,14 +353,14 @@ export default function TerminalPage() {
 
           <SidebarPanel title="Quick Commands">
             <div className="space-y-2.5">
-              {terminalData.quickCommands.map((item) => (
+              {liveTerminalData.quickCommands.map((item) => (
                 <QuickCommandCard description={item.description} icon={RotateCcw} key={item.id} onClick={() => handleQuickCommand(item.command)} title={item.title} />
               ))}
             </div>
           </SidebarPanel>
 
           <SidebarPanel title="Security Notice">
-            <SecurityNotice notices={terminalData.securityNotices} />
+            <SecurityNotice notices={liveTerminalData.securityNotices} />
           </SidebarPanel>
         </aside>
       </div>
@@ -371,7 +373,7 @@ export default function TerminalPage() {
         command={pendingCommand?.command ?? ""}
         onClose={closeModal}
         onConfirm={() => {
-          executeMockCommand();
+          executeBackendConfirmedCommand();
           closeModal();
         }}
         open={activeModal === "confirm_command"}

@@ -23,30 +23,11 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
 import { ResponsiveDrawer } from "@/components/ui/responsive-drawer";
-import { chatMockData } from "@/lib/mock/chat";
-import { systemStats } from "@/lib/mock/system";
+import { chatMockData } from "@/lib/data/chat";
+import { systemStats } from "@/lib/data/system";
 import { useChatStore } from "@/lib/store/chat-store";
-import { ChatAgent } from "@/types/chat";
 
 type ModalState = null | "new_chat" | "clear_chat" | "export_chat" | "share_chat" | "save_note" | "change_model";
-
-function buildAgentReply(agent: ChatAgent | undefined, prompt: string) {
-  const normalizedPrompt = prompt.toLowerCase();
-
-  if (normalizedPrompt.includes("roadmap")) {
-    return "Roadmap focus recommendation:\\n\\n- Prioritize orchestration reliability\\n- Lock workflow approval gates\\n- Increase memory optimization coverage\\n- Expand Obsidian sync test suite";
-  }
-
-  if (normalizedPrompt.includes("status")) {
-    return "Current status snapshot:\\n\\n1. Agent network stable\\n2. Model routing healthy\\n3. Workflow queues within thresholds\\n4. Pending approvals: 2";
-  }
-
-  if (normalizedPrompt.includes("code") || normalizedPrompt.includes("implement")) {
-    return "Implementation guidance:\\n\\n- Define acceptance criteria first\\n- Split work by agent ownership\\n- Add validation checks before handover\\n- Keep logs and metrics attached to the task";
-  }
-
-  return `${agent?.name ?? "JARVIS"} received your request. I will draft a structured response with next actions and approvals required.`;
-}
 
 const quickActions = [
   { key: "clear", title: "Clear Chat", description: "Reset active conversation", icon: Eraser },
@@ -81,12 +62,21 @@ export default function ChatPage() {
   const clearSession = useChatStore((state) => state.clearSession);
   const switchModel = useChatStore((state) => state.switchModel);
   const setTyping = useChatStore((state) => state.setTyping);
+  const hydrate = useChatStore((state) => state.hydrate);
 
   const bootstrapQuery = useQuery({
     queryKey: ["chat", "bootstrap"],
-    queryFn: async () => chatMockData,
+    queryFn: async () => {
+      const response = await fetch("/api/chat/bootstrap", { cache: "no-store" });
+      if (!response.ok) return chatMockData;
+      return response.json();
+    },
     initialData: chatMockData
   });
+
+  useEffect(() => {
+    hydrate(bootstrapQuery.data);
+  }, [bootstrapQuery.data, hydrate]);
 
   useEffect(() => {
     const onMouseDown = (event: MouseEvent) => {
@@ -135,12 +125,26 @@ export default function ChatPage() {
     const sessionId = sendUserMessage(prompt);
     if (!sessionId) return;
 
-    setTyping(sessionId, true);
-    const reply = buildAgentReply(selectedAgent, prompt);
+    const agentId = selectedAgent?.id ?? selectedAgentId;
+    const modelId = selectedSession?.modelId ?? models[0]?.id ?? "";
 
+    setTyping(sessionId, true);
     window.setTimeout(() => {
-      sendAgentMessage(sessionId, reply, "markdown");
-      setTyping(sessionId, false);
+      fetch("/api/chat/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agentId, modelId, prompt, sessionId, sessionTitle: selectedSession?.title })
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error("Chat backend request failed");
+          return response.json();
+        })
+        .then((response: { agentMessage?: { content?: string } }) => sendAgentMessage(sessionId, response.agentMessage?.content ?? "No response returned.", "markdown"))
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : "Unknown chat backend error";
+          sendAgentMessage(sessionId, `Backend chat request failed: ${message}`, "markdown");
+        })
+        .finally(() => setTyping(sessionId, false));
     }, 900);
   };
 

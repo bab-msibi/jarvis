@@ -157,10 +157,10 @@ export const terminalData: TerminalDataset = {
     { id: "qc-6", title: "Restart All Agents", description: "Restart active agent shells", command: "restart-all-agents" }
   ],
   securityNotices: [
-    { id: "sec-1", text: "Commands are mocked for now." },
-    { id: "sec-2", text: "Real execution should require explicit approval." },
-    { id: "sec-3", text: "Dangerous commands must be blocked by policy." },
-    { id: "sec-4", text: "All commands should be logged for audit." }
+    { id: "sec-1", text: "Commands must pass backend confirmation before execution." },
+    { id: "sec-2", text: "Only allowlisted safe commands are accepted by the terminal bridge." },
+    { id: "sec-3", text: "Dangerous commands are blocked by backend policy." },
+    { id: "sec-4", text: "All accepted and blocked commands are logged for audit." }
   ],
   defaultPath: "/Users/owner/jarvis"
 };

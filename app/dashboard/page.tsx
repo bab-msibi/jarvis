@@ -15,8 +15,9 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { LoadingState } from "@/components/shared/loading-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionPanel } from "@/components/shared/SectionPanel";
-import { getDashboardData } from "@/lib/mock/dashboard";
-import { systemStats } from "@/lib/mock/system";
+import { fetchDataResource } from "@/lib/api-client";
+import { getDashboardData, DashboardData } from "@/lib/data/dashboard";
+import { systemStats } from "@/lib/data/system";
 import { useUIStore } from "@/lib/store/ui-store";
 
 const actionButtonStyles =
@@ -26,10 +27,11 @@ export default function DashboardPage() {
   const activeAgentId = useUIStore((state) => state.activeAgentId);
   const setActiveAgentId = useUIStore((state) => state.setActiveAgentId);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["dashboard-data"],
-    queryFn: getDashboardData
+  const { data: dashboardResponse, isLoading } = useQuery({
+    queryKey: ["data", "dashboard"],
+    queryFn: async () => fetchDataResource<DashboardData>("dashboard", await getDashboardData())
   });
+  const data = dashboardResponse?.data;
 
   useEffect(() => {
     if (!data?.agents.length) return;

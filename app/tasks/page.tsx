@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   Briefcase,
@@ -33,11 +34,12 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { ActionButtonGroup } from "@/components/shared/action-button-group";
 import { PageHeader } from "@/components/shared/page-header";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
-import { agents } from "@/lib/mock/agents";
-import { brains } from "@/lib/mock/brains";
-import { models } from "@/lib/mock/models";
-import { systemStats } from "@/lib/mock/system";
-import { tasks as baseTasks } from "@/lib/mock/tasks";
+import { fetchDataResource } from "@/lib/api-client";
+import { agents } from "@/lib/data/agents";
+import { brains } from "@/lib/data/brains";
+import { models } from "@/lib/data/models";
+import { systemServices, systemStats } from "@/lib/data/system";
+import { tasks as baseTasks } from "@/lib/data/tasks";
 import { Task, TaskPriority, TaskStatus } from "@/types/task";
 
 const pageSize = 10;
@@ -111,6 +113,11 @@ function isWithinDateRange(createdAt: string, startDate: string, endDate: string
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>(() => baseTasks);
+  const tasksQuery = useQuery({ queryKey: ["data", "tasks"], queryFn: () => fetchDataResource("tasks", baseTasks) });
+  const agentsQuery = useQuery({ queryKey: ["data", "agents"], queryFn: () => fetchDataResource("agents", agents) });
+  const modelsQuery = useQuery({ queryKey: ["data", "models"], queryFn: () => fetchDataResource("models", models) });
+  const brainsQuery = useQuery({ queryKey: ["data", "brains"], queryFn: () => fetchDataResource("brains", brains) });
+  const systemQuery = useQuery({ queryKey: ["data", "system"], queryFn: () => fetchDataResource("system", { stats: systemStats, services: systemServices }) });
   const [searchValue, setSearchValue] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | TaskStatus>("ALL");
   const [priorityFilter, setPriorityFilter] = useState<"ALL" | TaskPriority>("ALL");
@@ -127,6 +134,10 @@ export default function TasksPage() {
   const [activeModal, setActiveModal] = useState<null | "create" | "edit" | "assign" | "delete" | "import" | "template">(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
+  useEffect(() => {
+    if (tasksQuery.data?.data) queueMicrotask(() => setTasks(tasksQuery.data.data));
+  }, [tasksQuery.data]);
+
   const pushToast = useCallback((payload: Omit<ToastItem, "id">) => {
     const id = crypto.randomUUID();
     setToasts((current) => [...current, { id, ...payload }]);
@@ -135,9 +146,9 @@ export default function TasksPage() {
     }, 3000);
   }, []);
 
-  const agentOptions = useMemo(() => agents.map((agent) => agent.name), []);
-  const modelOptions = useMemo(() => models.map((model) => model.name), []);
-  const brainOptions = useMemo(() => brains.map((brain) => brain.name), []);
+  const agentOptions = useMemo(() => (agentsQuery.data?.data ?? agents).map((agent) => agent.name), [agentsQuery.data]);
+  const modelOptions = useMemo(() => (modelsQuery.data?.data ?? models).map((model) => model.name), [modelsQuery.data]);
+  const brainOptions = useMemo(() => (brainsQuery.data?.data ?? brains).map((brain) => brain.name), [brainsQuery.data]);
 
   const filteredTasks = useMemo(() => {
     const queried = tasks.filter((task) => {
@@ -330,7 +341,7 @@ export default function TasksPage() {
   const taskBoard = <TaskBoard onMenuAction={handleTaskMenuAction} onOpenDetails={openDrawer} tasks={filteredTasks} />;
 
   return (
-    <DashboardLayout system={systemStats}>
+    <DashboardLayout system={systemQuery.data?.data.stats ?? systemStats}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
           <PageHeader

@@ -13,7 +13,7 @@ type ConfirmCommandModalProps = {
 export function ConfirmCommandModal({ open, command, sessionName, onClose, onConfirm }: ConfirmCommandModalProps) {
   return (
     <ModalShell
-      description="Commands are mocked in frontend mode. Approval is required before dispatch."
+      description="Commands are sent to the backend policy gate. Approval is required, and only allowlisted safe commands can run."
       footer={
         <>
           <button className="rounded-md border border-cyan-900/40 px-4 py-2 text-sm text-cyan-400 transition hover:border-cyan-500/50 hover:text-cyan-100" onClick={onClose} type="button">
