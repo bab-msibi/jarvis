@@ -11,11 +11,11 @@ type TaskActionMenuProps = {
   onAction: (action: TaskMenuAction) => void;
 };
 
-const items: Array<{ key: TaskMenuAction; label: string; danger?: boolean }> = [
+const items: Array<{ key: TaskMenuAction; label: string; danger?: boolean; upcoming?: boolean }> = [
   { key: "details", label: "View Details" },
-  { key: "edit", label: "Edit Task" },
-  { key: "assign", label: "Assign Task" },
-  { key: "delete", label: "Delete Task", danger: true }
+  { key: "edit", label: "Edit Task", upcoming: true },
+  { key: "assign", label: "Assign Task", upcoming: true },
+  { key: "delete", label: "Delete Task", danger: true, upcoming: true }
 ];
 
 export function TaskActionMenu({ onAction }: TaskActionMenuProps) {
@@ -60,7 +60,10 @@ export function TaskActionMenu({ onAction }: TaskActionMenuProps) {
               }}
               type="button"
             >
-              {item.label}
+              <span className="flex w-full items-center justify-between gap-2">
+                {item.label}
+                {item.upcoming ? <span className="rounded-full border border-amber-400/30 px-1.5 py-0.5 text-[10px] uppercase text-amber-200">Upcoming</span> : null}
+              </span>
             </button>
           ))}
         </div>

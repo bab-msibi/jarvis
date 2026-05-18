@@ -11,14 +11,14 @@ type BrainActionMenuProps = {
   onAction: (action: BrainMenuAction) => void;
 };
 
-const menuItems: Array<{ key: BrainMenuAction; label: string; danger?: boolean }> = [
-  { key: "view", label: "View Details" },
-  { key: "edit", label: "Edit Brain" },
-  { key: "sync", label: "Sync Brain" },
-  { key: "retrain", label: "Retrain Brain" },
-  { key: "link_models", label: "Link Models" },
-  { key: "link_agents", label: "Link Agents" },
-  { key: "delete", label: "Delete Brain", danger: true }
+const menuItems: Array<{ key: BrainMenuAction; label: string; danger?: boolean; upcoming?: boolean }> = [
+  { key: "view", label: "View Details", upcoming: true },
+  { key: "edit", label: "Edit Brain", upcoming: true },
+  { key: "sync", label: "Sync Brain", upcoming: true },
+  { key: "retrain", label: "Retrain Brain", upcoming: true },
+  { key: "link_models", label: "Link Models", upcoming: true },
+  { key: "link_agents", label: "Link Agents", upcoming: true },
+  { key: "delete", label: "Delete Brain", danger: true, upcoming: true }
 ];
 
 export function BrainActionMenu({ onAction }: BrainActionMenuProps) {
@@ -63,7 +63,10 @@ export function BrainActionMenu({ onAction }: BrainActionMenuProps) {
               }}
               type="button"
             >
-              {item.label}
+              <span className="flex w-full items-center justify-between gap-2">
+                {item.label}
+                {item.upcoming ? <span className="rounded-full border border-amber-400/30 px-1.5 py-0.5 text-[10px] uppercase text-amber-200">Upcoming</span> : null}
+              </span>
             </button>
           ))}
         </div>

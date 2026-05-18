@@ -44,6 +44,7 @@ export function SearchToolbar({
       >
         <Plus className="h-4 w-4" />
         New Agent
+        <span className="rounded-full border border-amber-400/30 px-1.5 py-0.5 text-[10px] uppercase text-amber-200">Upcoming</span>
       </button>
 
       <label className="flex h-11 items-center gap-2 rounded-lg border border-cyan-900/40 bg-sky-950/40 px-3">

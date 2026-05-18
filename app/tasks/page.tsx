@@ -17,7 +17,7 @@ import {
 import { AgentWorkloadItem } from "@/components/tasks/agent-workload-item";
 import { AssignTaskModal } from "@/components/tasks/assign-task-modal";
 import { CircularOverviewChart } from "@/components/tasks/circular-overview-chart";
-import { CreateTaskInput, CreateTaskModal } from "@/components/tasks/create-task-modal";
+import { CreateTaskModal } from "@/components/tasks/create-task-modal";
 import { DeleteTaskModal } from "@/components/tasks/delete-task-modal";
 import { EditTaskModal } from "@/components/tasks/edit-task-modal";
 import { ImportTasksModal } from "@/components/tasks/import-tasks-modal";
@@ -52,11 +52,11 @@ const priorityWeight: Record<TaskPriority, number> = {
 };
 
 const quickActions = [
-  { key: "create", title: "Create New Task", description: "Manually create a new task", icon: Plus },
-  { key: "assign", title: "Assign Task", description: "Assign a task to an AI agent", icon: Briefcase },
-  { key: "import", title: "Import Tasks", description: "Import tasks from file/CSV", icon: Download },
-  { key: "templates", title: "Task Templates", description: "Use prebuilt task templates", icon: SquareCheckBig },
-  { key: "calendar", title: "Task Calendar", description: "View tasks in calendar", icon: CalendarClock }
+  { key: "create", title: "Create New Task", description: "Upcoming: create a managed task", icon: Plus, upcoming: true },
+  { key: "assign", title: "Assign Task", description: "Upcoming: assign to an AI agent", icon: Briefcase, upcoming: true },
+  { key: "import", title: "Import Tasks", description: "Upcoming: import from file/CSV", icon: Download, upcoming: true },
+  { key: "templates", title: "Task Templates", description: "Upcoming: use prebuilt templates", icon: SquareCheckBig, upcoming: true },
+  { key: "calendar", title: "Task Calendar", description: "Upcoming: calendar view", icon: CalendarClock, upcoming: true }
 ] as const;
 
 function sortTasks(tasks: Task[], sortBy: TaskSortOption) {
@@ -203,9 +203,21 @@ export default function TasksPage() {
 
   const agentWorkloadMax = useMemo(() => Math.max(1, ...agentWorkload.map((entry) => entry.value)), [agentWorkload]);
 
+  const showUpcoming = useCallback((description: string, tone: ToastItem["tone"] = "info") => {
+    pushToast({ title: "Upcoming feature", description, tone });
+  }, [pushToast]);
+
   const openModal = (modal: "create" | "edit" | "assign" | "delete" | "import" | "template", task?: Task) => {
     setSelectedTask(task);
-    setActiveModal(modal);
+    const labels = {
+      create: "Creating JARVIS tasks will be enabled after a safe task-run API is added.",
+      edit: "Editing live OpenClaw task history is not supported yet.",
+      assign: "Assigning tasks to agents will be enabled after approval-gated execution is wired in.",
+      delete: "Deleting task history is blocked until safe cleanup controls are implemented.",
+      import: "Task imports will be enabled after persistent task storage is configured.",
+      template: "Task templates will be connected after managed task creation is implemented."
+    } as const;
+    showUpcoming(labels[modal], modal === "delete" ? "warning" : "info");
   };
 
   const closeModal = () => setActiveModal(null);
@@ -217,92 +229,28 @@ export default function TasksPage() {
 
   const closeDrawer = () => setDrawerOpen(false);
 
-  const createTaskFromValues = (values: CreateTaskInput) => {
-    const now = new Date().toISOString();
-    const createdTask: Task = {
-      id: `task-${values.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36)}`,
-      name: values.name,
-      description: values.description || "Task created from JARVIS control center.",
-      assignedAgent: values.assignedAgent,
-      linkedModel: values.linkedModel,
-      linkedBrain: values.linkedBrain,
-      priority: values.priority,
-      status: values.status,
-      progress: values.progress,
-      eta: values.eta,
-      createdAt: now,
-      updatedAt: now,
-      dueDate: values.dueDate ? new Date(values.dueDate).toISOString() : now,
-      tags: values.tags
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter(Boolean),
-      estimatedHours: values.estimatedHours
-    };
-
-    setTasks((current) => [createdTask, ...current]);
-    setCurrentPage(1);
-    pushToast({ title: "Task created", description: `${createdTask.name} has been added to the queue.`, tone: "success" });
+  const handleCreateTask = () => {
+    showUpcoming("Creating JARVIS tasks will be enabled after a safe task-run API is added.");
   };
 
-  const handleCreateTask = (values: CreateTaskInput) => {
-    createTaskFromValues(values);
+  const handleEditTask = () => {
+    showUpcoming("Editing live OpenClaw task history is not supported yet.");
   };
 
-  const handleEditTask = (taskId: string, updates: Partial<Task>) => {
-    setTasks((current) =>
-      current.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              ...updates,
-              updatedAt: new Date().toISOString()
-            }
-          : task
-      )
-    );
-    pushToast({ title: "Task updated", description: "Task settings were saved.", tone: "success" });
+  const handleAssignTask = () => {
+    showUpcoming("Assigning tasks to agents will be enabled after approval-gated execution is wired in.");
   };
 
-  const handleAssignTask = (taskId: string, assignedAgent: string, eta: string) => {
-    setTasks((current) =>
-      current.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              assignedAgent,
-              eta,
-              status: task.status === "COMPLETED" ? "COMPLETED" : "IN PROGRESS",
-              updatedAt: new Date().toISOString()
-            }
-          : task
-      )
-    );
-    pushToast({ title: "Task assigned", description: `Task reassigned to ${assignedAgent}.`, tone: "success" });
+  const handleDeleteTask = () => {
+    showUpcoming("Deleting task history is blocked until safe cleanup controls are implemented.", "warning");
   };
 
-  const handleDeleteTask = (taskId: string) => {
-    const removed = tasks.find((task) => task.id === taskId);
-    setTasks((current) => current.filter((task) => task.id !== taskId));
-    setSelectedTask(undefined);
-    setDrawerOpen(false);
-    pushToast({
-      title: "Task deleted",
-      description: removed ? `${removed.name} was removed.` : "Task removed.",
-      tone: "warning"
-    });
+  const handleImportTasks = () => {
+    showUpcoming("Task imports will be enabled after persistent task storage is configured.");
   };
 
-  const handleImportTasks = (source: string, value: string) => {
-    pushToast({
-      title: "Import queued",
-      description: value ? `${source} import source accepted.` : `${source} import mode selected.`,
-      tone: "info"
-    });
-  };
-
-  const handleTemplateApply = (template: CreateTaskInput) => {
-    createTaskFromValues(template);
+  const handleTemplateApply = () => {
+    showUpcoming("Task templates will be connected after managed task creation is implemented.");
   };
 
   const handleTaskMenuAction = (task: Task, action: TaskMenuAction) => {
@@ -317,12 +265,7 @@ export default function TasksPage() {
     if (action === "assign") return openModal("assign", tasks[0]);
     if (action === "import") return openModal("import");
     if (action === "templates") return openModal("template");
-
-    pushToast({
-      title: "Calendar integration ready",
-      description: "Task calendar will be connected in backend integration.",
-      tone: "info"
-    });
+    return showUpcoming("Task calendar will be connected after live scheduling support is added.");
   };
 
   const taskTable = (
@@ -354,12 +297,17 @@ export default function TasksPage() {
                 >
                   <Plus className="h-4 w-4" />
                   New Task
+                  <span className="rounded-full border border-amber-400/30 px-1.5 py-0.5 text-[10px] uppercase text-amber-200">Upcoming</span>
                 </button>
               </ActionButtonGroup>
             }
-            subtitle="Monitor, manage and track all tasks across your AI agents and workflows."
+            subtitle="Live OpenClaw task runs from this Mac. Management controls marked Upcoming are intentionally not active yet."
             title="Tasks"
           />
+
+          <section className="rounded-2xl border border-amber-400/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            Live mode is enabled: dummy tasks were removed. This page now reflects real OpenClaw task runs and history from the local runtime.
+          </section>
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
             <StatsCard description="All tasks" icon={Database} label="Total Tasks" tone="cyan" value={counts.total} />
@@ -493,6 +441,7 @@ export default function TasksPage() {
                   key={action.key}
                   onClick={() => handleQuickAction(action.key)}
                   title={action.title}
+                  upcoming={action.upcoming}
                 />
               ))}
             </div>

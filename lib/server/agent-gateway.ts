@@ -1,5 +1,9 @@
 import { DataResource, getDataResource } from "@/lib/server/database";
 import { fetchWithTimeout, getErrorMessage } from "@/lib/server/http";
+import { getLiveAgents } from "@/lib/server/live-agents";
+import { getLiveBrains } from "@/lib/server/live-brains";
+import { getLiveModels } from "@/lib/server/live-models";
+import { getLiveTasks } from "@/lib/server/live-tasks";
 
 export type GatewayResourceResponse = {
   data: unknown;
@@ -56,6 +60,42 @@ export async function getGatewayBackedResource(resource: DataResource): Promise<
   if (gateway) return gateway;
 
   try {
+    if (resource === "agents") {
+      const liveAgents = await getLiveAgents();
+      return {
+        data: liveAgents,
+        source: "database",
+        gateway: { url: gatewayUrl(), connected: false, message: "Loaded live agents from this Mac via OpenClaw status." }
+      };
+    }
+
+    if (resource === "brains") {
+      const liveBrains = await getLiveBrains();
+      return {
+        data: liveBrains,
+        source: "database",
+        gateway: { url: gatewayUrl(), connected: false, message: "Loaded live brains from workspace knowledge sources." }
+      };
+    }
+
+    if (resource === "models") {
+      const liveModels = await getLiveModels();
+      return {
+        data: liveModels,
+        source: "database",
+        gateway: { url: gatewayUrl(), connected: false, message: "Loaded live models from this Mac and configured providers." }
+      };
+    }
+
+    if (resource === "tasks") {
+      const liveTasks = await getLiveTasks();
+      return {
+        data: liveTasks,
+        source: "database",
+        gateway: { url: gatewayUrl(), connected: false, message: "Loaded live task runs from OpenClaw." }
+      };
+    }
+
     const fallback = await getDataResource(resource);
     return {
       data: fallback,

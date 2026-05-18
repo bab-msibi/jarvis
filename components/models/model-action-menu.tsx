@@ -11,12 +11,12 @@ type ModelActionMenuProps = {
   onAction: (action: ModelMenuAction) => void;
 };
 
-const items: Array<{ key: ModelMenuAction; label: string; danger?: boolean }> = [
-  { key: "manage", label: "Manage" },
-  { key: "edit", label: "Edit" },
-  { key: "test", label: "Test Connection" },
-  { key: "sync", label: "Sync Quota" },
-  { key: "delete", label: "Delete", danger: true }
+const items: Array<{ key: ModelMenuAction; label: string; danger?: boolean; upcoming?: boolean }> = [
+  { key: "manage", label: "Manage", upcoming: true },
+  { key: "edit", label: "Edit", upcoming: true },
+  { key: "test", label: "Test Connection", upcoming: true },
+  { key: "sync", label: "Sync Quota", upcoming: true },
+  { key: "delete", label: "Delete", danger: true, upcoming: true }
 ];
 
 export function ModelActionMenu({ onAction }: ModelActionMenuProps) {
@@ -61,7 +61,10 @@ export function ModelActionMenu({ onAction }: ModelActionMenuProps) {
               }}
               type="button"
             >
-              {item.label}
+              <span className="flex w-full items-center justify-between gap-2">
+                {item.label}
+                {item.upcoming ? <span className="rounded-full border border-amber-400/30 px-1.5 py-0.5 text-[10px] uppercase text-amber-200">Upcoming</span> : null}
+              </span>
             </button>
           ))}
         </div>
