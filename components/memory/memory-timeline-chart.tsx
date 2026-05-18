@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { MemoryTimelinePoint } from "@/types/memory";
@@ -9,6 +10,13 @@ type MemoryTimelineChartProps = {
 };
 
 export function MemoryTimelineChart({ data }: MemoryTimelineChartProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   return (
     <section className="panel-base rounded-2xl">
       <header className="border-b border-cyan-900/35 px-4 py-3">
@@ -16,7 +24,7 @@ export function MemoryTimelineChart({ data }: MemoryTimelineChartProps) {
       </header>
 
       <div className="h-[280px] p-4">
-        <ResponsiveContainer height="100%" minHeight={220} minWidth={0} width="100%">
+        {mounted ? <ResponsiveContainer height="100%" minHeight={220} minWidth={0} width="100%">
           <LineChart data={data}>
             <CartesianGrid stroke="rgba(34,211,238,0.14)" strokeDasharray="3 3" />
             <XAxis dataKey="date" stroke="#7dd3fc" tick={{ fontSize: 12 }} />
@@ -26,7 +34,7 @@ export function MemoryTimelineChart({ data }: MemoryTimelineChartProps) {
             <Line dataKey="accessed" dot={{ r: 3 }} stroke="#22c55e" strokeWidth={2} type="monotone" />
             <Line dataKey="expired" dot={{ r: 3 }} stroke="#ef4444" strokeWidth={2} type="monotone" />
           </LineChart>
-        </ResponsiveContainer>
+        </ResponsiveContainer> : null}
       </div>
 
       <footer className="flex flex-wrap items-center gap-4 border-t border-cyan-900/35 px-4 py-2 text-xs text-cyan-500">

@@ -23,7 +23,7 @@ export const terminalData: TerminalDataset = {
       cwd: "/Users/owner/jarvis/agents/pm",
       logs: [
         "JARVIS Terminal initialized",
-        "Connected to Mac Mini M4",
+        "Connected to Admin’s MacBook Pro",
         "Agent gateway online",
         "Ollama service active",
         "PM Agent session ready",

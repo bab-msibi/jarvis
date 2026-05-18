@@ -1,5 +1,3 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
 
 import { agents } from "@/lib/data/agents";
 import { brains } from "@/lib/data/brains";
@@ -14,6 +12,7 @@ import { tasks } from "@/lib/data/tasks";
 import { terminalData } from "@/lib/data/terminal";
 import { workflowNodeConfigs } from "@/lib/data/workflow-nodes";
 import { workflows } from "@/lib/data/workflows";
+import { getJarvisStorageConfig, readJsonFile, writeJsonFileAtomic } from "@/lib/server/storage";
 
 export type JarvisDatabase = {
   agents: typeof agents;
@@ -43,10 +42,9 @@ export type JarvisDatabase = {
 
 export type DataResource = keyof JarvisDatabase | "dashboard";
 
-const dataDir = path.join(process.cwd(), ".jarvis-data");
-const dbPath = process.env.DATABASE_URL?.startsWith("file:")
-  ? process.env.DATABASE_URL.replace(/^file:/, "")
-  : path.join(dataDir, "database.json");
+function getDatabasePath() {
+  return getJarvisStorageConfig().dbPath;
+}
 
 export function createSeedDatabase(): JarvisDatabase {
   return {
@@ -77,14 +75,12 @@ export function createSeedDatabase(): JarvisDatabase {
 }
 
 async function writeDatabase(db: JarvisDatabase) {
-  await mkdir(path.dirname(dbPath), { recursive: true });
-  await writeFile(dbPath, `${JSON.stringify(db, null, 2)}\n`, "utf8");
+  await writeJsonFileAtomic(getDatabasePath(), db);
 }
 
 export async function getDatabase(): Promise<JarvisDatabase> {
   try {
-    const raw = await readFile(dbPath, "utf8");
-    const parsed = JSON.parse(raw) as Partial<JarvisDatabase>;
+    const parsed = await readJsonFile<Partial<JarvisDatabase>>(getDatabasePath());
     return { ...createSeedDatabase(), ...parsed };
   } catch {
     const seeded = createSeedDatabase();

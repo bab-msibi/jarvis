@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Pie, PieChart, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 import { MemoryUsageSlice } from "@/types/memory";
@@ -12,10 +13,17 @@ type MemoryUsagePanelProps = {
 };
 
 export function MemoryUsagePanel({ usedGB, totalAllocatedGB, availableGB, slices }: MemoryUsagePanelProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   return (
     <div className="space-y-3">
       <div className="relative h-[210px]">
-        <ResponsiveContainer height="100%" minHeight={190} minWidth={0} width="100%">
+        {mounted ? <ResponsiveContainer height="100%" minHeight={190} minWidth={0} width="100%">
           <PieChart>
             <Pie cx="50%" cy="50%" data={slices} dataKey="valueGB" innerRadius={44} outerRadius={66} paddingAngle={2} stroke="none">
               {slices.map((slice) => (
@@ -24,7 +32,7 @@ export function MemoryUsagePanel({ usedGB, totalAllocatedGB, availableGB, slices
             </Pie>
             <Tooltip contentStyle={{ background: "#071523", border: "1px solid rgba(56, 189, 248, 0.4)", borderRadius: 8 }} />
           </PieChart>
-        </ResponsiveContainer>
+        </ResponsiveContainer> : null}
 
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
           <p className="text-3xl text-cyan-100">{usedGB.toFixed(1)} GB</p>

@@ -121,7 +121,7 @@ export const chatModels: ChatModel[] = [
     name: "Local Ollama Model",
     provider: "Ollama",
     status: "ACTIVE",
-    description: "Local private inference through the Mac Mini M4 Ollama runtime.",
+    description: "Local private inference through the Admin’s MacBook Pro Ollama runtime.",
     contextWindow: "32K"
   }
 ];

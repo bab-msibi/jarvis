@@ -1,9 +1,9 @@
 import { SystemService, SystemStats } from "@/types/system";
 
 export const systemStats: SystemStats = {
-  name: "Mac Mini M4",
-  specs: "10-Core CPU / 10-Core GPU / 16GB Unified Memory",
-  os: "macOS 14.4",
+  name: "Admin’s MacBook Pro",
+  specs: "Intel Core i9 / 32GB Memory",
+  os: "macOS 15.7.4",
   cpuUsage: 18,
   ramUsage: 32,
   ssdUsage: 47,
@@ -14,8 +14,8 @@ export const systemStats: SystemStats = {
 
 export const systemServices: SystemService[] = [
   {
-    id: "system-mac-mini-m4",
-    name: "Mac Mini M4",
+    id: "system-admins-macbook-pro",
+    name: "Admin’s MacBook Pro",
     description: "Primary host for local JARVIS agents and system orchestration.",
     status: "online",
     lastChecked: "mocked live check",
@@ -33,7 +33,7 @@ export const systemServices: SystemService[] = [
   {
     id: "system-ollama-service",
     name: "Ollama Service",
-    description: "Local model runtime for private inference on the Mac Mini.",
+    description: "Local model runtime for private inference on the MacBook Pro.",
     status: "warning",
     endpoint: "http://127.0.0.1:11434",
     lastChecked: "mocked live check",
