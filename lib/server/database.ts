@@ -6,6 +6,7 @@ import { memoryData } from "@/lib/data/memory";
 import { models } from "@/lib/data/models";
 import { monitorData } from "@/lib/data/monitor";
 import { obsidianData, obsidianStats } from "@/lib/data/obsidian";
+import { remoteNodes } from "@/lib/data/remote-nodes";
 import { settingsCategories, settingsDefaults, settingsHealthItems, settingsSystemProfile } from "@/lib/data/settings";
 import { systemServices, systemStats } from "@/lib/data/system";
 import { tasks } from "@/lib/data/tasks";
@@ -22,6 +23,7 @@ export type JarvisDatabase = {
   models: typeof models;
   monitor: typeof monitorData;
   obsidian: typeof obsidianData & { stats: typeof obsidianStats };
+  remoteNodes: typeof remoteNodes;
   settings: {
     categories: typeof settingsCategories;
     defaults: typeof settingsDefaults;
@@ -55,6 +57,7 @@ export function createSeedDatabase(): JarvisDatabase {
     models,
     monitor: monitorData,
     obsidian: { ...obsidianData, stats: obsidianStats },
+    remoteNodes,
     settings: {
       categories: settingsCategories,
       defaults: settingsDefaults,
@@ -98,7 +101,8 @@ export async function getDataResource(resource: DataResource) {
       models: db.models,
       brains: db.brains,
       systemStats: db.system.stats,
-      obsidianStats: db.obsidian.stats
+      obsidianStats: db.obsidian.stats,
+      remoteNodes: db.remoteNodes
     };
   }
   return db[resource];

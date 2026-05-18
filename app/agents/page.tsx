@@ -18,7 +18,7 @@ import { AgentChatModal } from "@/components/agents/agent-chat-modal";
 import { AgentsTable } from "@/components/agents/agents-table";
 import { AssignTaskModal } from "@/components/agents/assign-task-modal";
 import { CircularOverviewChart } from "@/components/agents/circular-overview-chart";
-import { CreateAgentInput, CreateAgentModal } from "@/components/agents/create-agent-modal";
+import { CreateAgentModal } from "@/components/agents/create-agent-modal";
 import { DeleteAgentModal } from "@/components/agents/delete-agent-modal";
 import { EditAgentModal } from "@/components/agents/edit-agent-modal";
 import { QuickActionCard } from "@/components/agents/quick-action-card";
@@ -39,17 +39,6 @@ import { Agent, AgentStatus } from "@/types/agent";
 
 const pageSize = 8;
 
-function getInitials(value: string) {
-  const cleaned = value.trim();
-  if (!cleaned) return "AG";
-  const words = cleaned.split(/\s+/);
-  if (words.length === 1) return words[0].slice(0, 3).toUpperCase();
-  return words
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
-}
 
 function getRoleBreakdown(agents: Agent[]) {
   const buckets = {
@@ -85,26 +74,30 @@ const quickActions = [
   {
     key: "create",
     title: "Create New Agent",
-    description: "Add a new AI agent to the system",
-    icon: Bot
+    description: "Upcoming: create local/remote agents",
+    icon: Bot,
+    upcoming: true
   },
   {
     key: "import",
     title: "Import Agent",
-    description: "Import agent configuration",
-    icon: Download
+    description: "Upcoming: import agent configuration",
+    icon: Download,
+    upcoming: true
   },
   {
     key: "assign",
     title: "Assign Task",
-    description: "Assign a task to an agent",
-    icon: Briefcase
+    description: "Upcoming: assign a task to an agent",
+    icon: Briefcase,
+    upcoming: true
   },
   {
     key: "templates",
     title: "Agent Templates",
-    description: "Use prebuilt agent templates",
-    icon: SquareCheckBig
+    description: "Upcoming: use prebuilt agent templates",
+    icon: SquareCheckBig,
+    upcoming: true
   }
 ] as const;
 
@@ -164,85 +157,28 @@ export default function AgentsPage() {
 
   const roleBreakdown = useMemo(() => getRoleBreakdown(agents), [agents]);
 
-  const handleCreateAgent = (values: CreateAgentInput) => {
-    const createdAgent: Agent = {
-      id: `agent-${values.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36)}`,
-      name: values.name,
-      initials: getInitials(values.name),
-      role: values.role,
-      status: values.status,
-      currentTask: values.currentTask,
-      assignedModel: values.assignedModel,
-      cpuUsage: values.status === "IDLE" ? 2 : 10,
-      ramUsage: values.status === "IDLE" ? 6 : 14,
-      lastActive: "just now",
-      permissions: ["custom_permissions"],
-      brain: values.brain,
-      createdAt: new Date().toISOString()
-    };
+  const showUpcoming = useCallback((description: string, tone: ToastItem["tone"] = "info") => {
+    pushToast({ title: "Upcoming feature", description, tone });
+  }, [pushToast]);
 
-    setAgents((current) => [createdAgent, ...current]);
-    pushToast({ title: "Agent created", description: `${values.name} has been added to your roster.`, tone: "success" });
+  const handleCreateAgent = () => {
+    showUpcoming("Creating live agents will be enabled after the secure agent lifecycle API is added.");
   };
 
-  const handleAssignTask = (agentId: string, task: string) => {
-    setAgents((current) =>
-      current.map((agent) =>
-        agent.id === agentId
-          ? {
-              ...agent,
-              currentTask: task,
-              status: "BUSY",
-              lastActive: "just now",
-              cpuUsage: Math.max(agent.cpuUsage, 18),
-              ramUsage: Math.max(agent.ramUsage, 16)
-            }
-          : agent
-      )
-    );
-    pushToast({ title: "Task assigned", description: "New task was assigned successfully.", tone: "success" });
+  const handleAssignTask = () => {
+    showUpcoming("Task assignment will connect to the workflow runner in a later build.");
   };
 
-  const handleEditAgent = (agentId: string, updates: Pick<Agent, "name" | "role" | "status" | "brain">) => {
-    setAgents((current) =>
-      current.map((agent) =>
-        agent.id === agentId
-          ? {
-              ...agent,
-              ...updates,
-              initials: getInitials(updates.name),
-              lastActive: "just now"
-            }
-          : agent
-      )
-    );
-    pushToast({ title: "Agent updated", description: "Agent settings were saved.", tone: "success" });
+  const handleEditAgent = () => {
+    showUpcoming("Editing live agents requires the secure agent config API first.");
   };
 
-  const handleDeleteAgent = (agentId: string) => {
-    const removedAgent = agents.find((agent) => agent.id === agentId);
-    setAgents((current) => current.filter((agent) => agent.id !== agentId));
-    pushToast({
-      title: "Agent deleted",
-      description: removedAgent ? `${removedAgent.name} has been removed.` : "Agent removed from roster.",
-      tone: "warning"
-    });
-    setSelectedAgent(undefined);
+  const handleDeleteAgent = () => {
+    showUpcoming("Deleting live agents is blocked until lifecycle approvals are implemented.", "warning");
   };
 
-  const handleReassignModel = (agentId: string, model: string) => {
-    setAgents((current) =>
-      current.map((agent) =>
-        agent.id === agentId
-          ? {
-              ...agent,
-              assignedModel: model,
-              lastActive: "just now"
-            }
-          : agent
-      )
-    );
-    pushToast({ title: "Model reassigned", description: `Agent now uses ${model}.`, tone: "info" });
+  const handleReassignModel = () => {
+    showUpcoming("Model reassignment will be enabled after provider routing policies are live.");
   };
 
   const openModal = (modal: "chat" | "create" | "edit" | "assign" | "delete" | "reassign", agent?: Agent) => {
@@ -254,67 +190,27 @@ export default function AgentsPage() {
     setActiveModal(null);
   };
 
-  const handleMenuAction = (agent: Agent, action: AgentMenuAction) => {
-    if (action === "edit") return openModal("edit", agent);
-    if (action === "assign") return openModal("assign", agent);
-    if (action === "reassign") return openModal("reassign", agent);
-    if (action === "delete") return openModal("delete", agent);
-
-    if (action === "pause") {
-      setAgents((current) =>
-        current.map((currentAgent) =>
-          currentAgent.id === agent.id
-            ? {
-                ...currentAgent,
-                status: "IDLE",
-                currentTask: "Paused by operator",
-                lastActive: "just now"
-              }
-            : currentAgent
-        )
-      );
-      return pushToast({ title: `${agent.name} paused`, tone: "warning" });
-    }
-
-    if (action === "restart") {
-      setAgents((current) =>
-        current.map((currentAgent) =>
-          currentAgent.id === agent.id
-            ? {
-                ...currentAgent,
-                status: "ONLINE",
-                currentTask: "System restart completed",
-                lastActive: "just now"
-              }
-            : currentAgent
-        )
-      );
-      return pushToast({ title: `${agent.name} restarted`, tone: "success" });
-    }
+  const handleMenuAction = (_agent: Agent, action: AgentMenuAction) => {
+    showUpcoming(`${action} for live agents will be enabled after secure lifecycle controls are added.`);
   };
 
   const handleQuickAction = (actionKey: (typeof quickActions)[number]["key"]) => {
-    if (actionKey === "create") return openModal("create");
-    if (actionKey === "assign") return openModal("assign", agents[0]);
-    if (actionKey === "import") {
-      return pushToast({
-        title: "Import ready",
-        description: "Agent import pipeline is prepared for backend integration.",
-        tone: "info"
-      });
+    if (actionKey === "create" || actionKey === "assign") {
+      return showUpcoming("Agent creation and task assignment need the secure lifecycle API first.");
     }
-    pushToast({
-      title: "Templates coming soon",
-      description: "Template orchestration will be connected to your backend workflow service.",
-      tone: "info"
-    });
+    if (actionKey === "import") return showUpcoming("Agent import will be enabled after config validation and approvals are added.");
+    return showUpcoming("Agent templates will be connected to the backend workflow service later.");
   };
 
   return (
     <DashboardLayout system={systemQuery.data?.data.stats ?? systemStats}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
-          <PageHeader subtitle="Manage and monitor all AI agents running on your system." title="Agents" />
+          <PageHeader subtitle="Live OpenClaw agent and service data from this Mac. Controls marked Upcoming are intentionally not active yet." title="Agents" />
+
+          <section className="rounded-2xl border border-amber-400/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            Live mode is enabled: dummy agents were removed. Lifecycle controls are marked Upcoming until secure approvals and backend APIs are added.
+          </section>
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <StatsCard description="Active agents" icon={Bot} label="Total Agents" tone="cyan" value={counts.total} />
@@ -326,7 +222,7 @@ export default function AgentsPage() {
 
           <section className="panel-base rounded-2xl p-4 sm:p-5">
             <SearchToolbar
-              onCreate={() => openModal("create")}
+              onCreate={() => showUpcoming("Creating agents will be enabled after secure lifecycle controls are added.")}
               onReset={() => {
                 setSearchValue("");
                 setStatusFilter("ALL");
@@ -406,6 +302,7 @@ export default function AgentsPage() {
                   key={action.key}
                   onClick={() => handleQuickAction(action.key)}
                   title={action.title}
+                  upcoming={action.upcoming}
                 />
               ))}
             </div>

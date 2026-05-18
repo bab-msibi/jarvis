@@ -11,13 +11,13 @@ type AgentActionMenuProps = {
   onAction: (action: AgentMenuAction) => void;
 };
 
-const menuItems: Array<{ key: AgentMenuAction; label: string; tone?: "danger" }> = [
-  { key: "edit", label: "Edit Agent" },
-  { key: "assign", label: "Assign Task" },
-  { key: "reassign", label: "Reassign Model" },
-  { key: "pause", label: "Pause Agent" },
-  { key: "restart", label: "Restart Agent" },
-  { key: "delete", label: "Delete Agent", tone: "danger" }
+const menuItems: Array<{ key: AgentMenuAction; label: string; tone?: "danger"; upcoming?: boolean }> = [
+  { key: "edit", label: "Edit Agent", upcoming: true },
+  { key: "assign", label: "Assign Task", upcoming: true },
+  { key: "reassign", label: "Reassign Model", upcoming: true },
+  { key: "pause", label: "Pause Agent", upcoming: true },
+  { key: "restart", label: "Restart Agent", upcoming: true },
+  { key: "delete", label: "Delete Agent", tone: "danger", upcoming: true }
 ];
 
 export function AgentActionMenu({ onAction }: AgentActionMenuProps) {
@@ -65,7 +65,10 @@ export function AgentActionMenu({ onAction }: AgentActionMenuProps) {
               }}
               type="button"
             >
-              {item.label}
+              <span className="flex w-full items-center justify-between gap-2">
+                {item.label}
+                {item.upcoming ? <span className="rounded-full border border-amber-400/30 px-1.5 py-0.5 text-[10px] uppercase text-amber-200">Upcoming</span> : null}
+              </span>
             </button>
           ))}
         </div>

@@ -14,6 +14,7 @@ const resources = new Set<DataResource>([
   "models",
   "monitor",
   "obsidian",
+  "remoteNodes",
   "settings",
   "system",
   "tasks",

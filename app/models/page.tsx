@@ -14,7 +14,7 @@ import {
   SquarePen
 } from "lucide-react";
 
-import { AddModelInput, AddModelModal } from "@/components/models/add-model-modal";
+import { AddModelModal } from "@/components/models/add-model-modal";
 import { CircularOverviewChart } from "@/components/models/circular-overview-chart";
 import { DeleteModelModal } from "@/components/models/delete-model-modal";
 import { EditModelModal } from "@/components/models/edit-model-modal";
@@ -42,15 +42,12 @@ type SortOption = "recent" | "usage_desc" | "usage_asc" | "name_asc" | "provider
 const pageSize = 8;
 
 const quickActions = [
-  { key: "add", title: "Add New Model", description: "Connect a new AI model", icon: Plus },
-  { key: "test", title: "Test Model Connection", description: "Verify API or local model", icon: Link2 },
-  { key: "sync", title: "Sync Model Quotas", description: "Refresh usage and limits", icon: RefreshCw },
-  { key: "templates", title: "Model Templates", description: "Use prebuilt model configs", icon: SquarePen }
+  { key: "add", title: "Add New Model", description: "Upcoming: connect a new AI model", icon: Plus, upcoming: true },
+  { key: "test", title: "Test Model Connection", description: "Upcoming: run manual endpoint tests", icon: Link2, upcoming: true },
+  { key: "sync", title: "Sync Model Quotas", description: "Upcoming: refresh usage and limits", icon: RefreshCw, upcoming: true },
+  { key: "templates", title: "Model Templates", description: "Upcoming: use prebuilt model configs", icon: SquarePen, upcoming: true }
 ] as const;
 
-function formatAddedOn(date: Date) {
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
 
 function sortModels(models: Model[], sortBy: SortOption) {
   const sorted = [...models];
@@ -88,7 +85,7 @@ export default function ModelsPage() {
   const [compactCards, setCompactCards] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeModal, setActiveModal] = useState<null | "add" | "edit" | "test" | "delete" | "sync">(null);
-  const [selectedModel, setSelectedModel] = useState<Model | undefined>();
+  const selectedModel = undefined as Model | undefined;
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   useEffect(() => {
@@ -146,99 +143,41 @@ export default function ModelsPage() {
     });
   }, [models]);
 
-  const openModal = (modal: "add" | "edit" | "test" | "delete" | "sync", model?: Model) => {
-    setSelectedModel(model);
-    setActiveModal(modal);
-  };
-
   const closeModal = () => setActiveModal(null);
 
-  const handleAddModel = (values: AddModelInput) => {
-    const createdModel: Model = {
-      id: `model-${values.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36)}`,
-      name: values.name,
-      provider: values.provider,
-      version: values.version,
-      type: values.type,
-      status: values.status,
-      usage: Math.max(0, Math.min(100, values.usage)),
-      connectedAgents: Math.max(0, values.connectedAgents),
-      contextWindow: values.contextWindow,
-      quota: values.quota,
-      addedOn: formatAddedOn(new Date()),
-      description: values.description,
-      apiEndpoint: values.apiEndpoint,
-      localPath: values.localPath
-    };
+  const showUpcoming = useCallback((description: string, tone: ToastItem["tone"] = "info") => {
+    pushToast({ title: "Upcoming feature", description, tone });
+  }, [pushToast]);
 
-    setModels((current) => [createdModel, ...current]);
-    pushToast({ title: "Model added", description: `${values.name} is now available in JARVIS.`, tone: "success" });
+  const handleAddModel = () => {
+    showUpcoming("Adding models will be enabled after secure provider credential storage and validation are added.");
   };
 
-  const handleEditModel = (modelId: string, updates: Partial<Model>) => {
-    setModels((current) => current.map((model) => (model.id === modelId ? { ...model, ...updates } : model)));
-    pushToast({ title: "Model updated", description: "Model settings were saved successfully.", tone: "success" });
+  const handleEditModel = () => {
+    showUpcoming("Editing live model configuration requires the secure provider settings API first.");
   };
 
-  const handleDeleteModel = (modelId: string) => {
-    const removed = models.find((model) => model.id === modelId);
-    setModels((current) => current.filter((model) => model.id !== modelId));
-    pushToast({
-      title: "Model deleted",
-      description: removed ? `${removed.name} has been removed.` : "Model removed.",
-      tone: "warning"
-    });
+  const handleDeleteModel = () => {
+    showUpcoming("Deleting model configuration is blocked until approval controls are implemented.", "warning");
   };
 
-  const handleSyncQuota = (modelId: string) => {
-    setModels((current) =>
-      current.map((model) =>
-        model.id === modelId
-          ? {
-              ...model,
-              usage: Math.max(5, Math.min(95, model.usage + (Math.random() > 0.5 ? 3 : -3))),
-              status: "ACTIVE"
-            }
-          : model
-      )
-    );
-    pushToast({ title: "Quota synced", description: "Usage metrics refreshed.", tone: "info" });
+  const handleSyncQuota = () => {
+    showUpcoming("Quota sync will be enabled after provider-specific usage APIs are connected.");
   };
 
-  const handleTestComplete = (modelId: string, success: boolean) => {
-    setModels((current) =>
-      current.map((model) =>
-        model.id === modelId
-          ? {
-              ...model,
-              status: success ? "ACTIVE" : "ERROR"
-            }
-          : model
-      )
-    );
-    pushToast({
-      title: success ? "Connection successful" : "Connection failed",
-      description: success ? "Model endpoint is responding." : "Failed to reach model endpoint.",
-      tone: success ? "success" : "error"
-    });
+  const handleTestComplete = () => {
+    showUpcoming("Manual test results will be enabled after the live provider test runner is added.");
   };
 
-  const handleMenuAction = (model: Model, action: ModelMenuAction) => {
-    if (action === "manage" || action === "edit") return openModal("edit", model);
-    if (action === "test") return openModal("test", model);
-    if (action === "sync") return openModal("sync", model);
-    if (action === "delete") return openModal("delete", model);
+  const handleMenuAction = (_model: Model, action: ModelMenuAction) => {
+    showUpcoming(`${action} for live models will be enabled after secure provider controls are added.`);
   };
 
   const handleQuickAction = (action: (typeof quickActions)[number]["key"]) => {
-    if (action === "add") return openModal("add");
-    if (action === "test") return openModal("test", models[0]);
-    if (action === "sync") return openModal("sync", models[0]);
-    pushToast({
-      title: "Templates coming soon",
-      description: "Model template library will be connected in backend integration.",
-      tone: "info"
-    });
+    if (action === "add") return showUpcoming("Adding models needs secure credential storage and provider validation first.");
+    if (action === "test") return showUpcoming("Manual connection tests will use the live provider test runner in a later build.");
+    if (action === "sync") return showUpcoming("Quota sync will connect to provider-specific usage APIs later.");
+    return showUpcoming("Model template library will be connected in backend integration.");
   };
 
   return (
@@ -250,17 +189,22 @@ export default function ModelsPage() {
               <ActionButtonGroup>
                 <button
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-cyan-500/55 bg-cyan-500/20 px-4 text-sm text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-500/30"
-                  onClick={() => openModal("add")}
+                  onClick={() => showUpcoming("Adding models needs secure credential storage and provider validation first.")}
                   type="button"
                 >
                   <Plus className="h-4 w-4" />
                   Add Model
+                  <span className="rounded-full border border-amber-400/30 px-1.5 py-0.5 text-[10px] uppercase text-amber-200">Upcoming</span>
                 </button>
               </ActionButtonGroup>
             }
-            subtitle="Manage and configure all AI models available on your system."
+            subtitle="Live local/provider model data from this Mac. Controls marked Upcoming are intentionally not active yet."
             title="Models"
           />
+
+          <section className="rounded-2xl border border-amber-400/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            Live mode is enabled: dummy models were removed. Local Ollama and configured provider checks are shown; model management controls are marked Upcoming.
+          </section>
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <StatsCard description="All models" icon={Database} label="Total Models" tone="cyan" value={counts.total} />
@@ -311,12 +255,12 @@ export default function ModelsPage() {
             />
           </section>
 
-          <ModelsGrid compact={compactCards} models={filteredModels} onManage={(model) => openModal("edit", model)} onMenuAction={handleMenuAction} />
+          <ModelsGrid compact={compactCards} models={filteredModels} onManage={(model) => handleMenuAction(model, "manage")} onMenuAction={handleMenuAction} />
 
           <ModelsTable
             currentPage={safeCurrentPage}
             models={pagedModels}
-            onManage={(model) => openModal("edit", model)}
+            onManage={(model) => handleMenuAction(model, "manage")}
             onMenuAction={handleMenuAction}
             onPageChange={(page) => setCurrentPage(Math.max(1, Math.min(page, totalPages)))}
             pageSize={pageSize}
@@ -347,6 +291,7 @@ export default function ModelsPage() {
                   key={action.key}
                   onClick={() => handleQuickAction(action.key)}
                   title={action.title}
+                  upcoming={action.upcoming}
                 />
               ))}
             </div>

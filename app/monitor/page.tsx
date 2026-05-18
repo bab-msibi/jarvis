@@ -44,6 +44,12 @@ import { monitorData } from "@/lib/data/monitor";
 import { systemServices, systemStats } from "@/lib/data/system";
 import { useMonitorStore } from "@/lib/store/monitor-store";
 import { AgentPerformance, Incident, MonitorLog, MonitorService, MonitorStatus, ServiceStatus, SystemMetric } from "@/types/monitor";
+import { RemoteNodeHealth } from "@/types/remote-node";
+
+type NodesHealth = {
+  health: RemoteNodeHealth[];
+  checkedAt: string;
+};
 
 type StorageHealth = {
   storage: {
@@ -115,6 +121,14 @@ export default function MonitorPage() {
   const [incidents, setIncidents] = useState<Incident[]>(() => monitorData.incidents);
   const monitorQuery = useQuery({ queryKey: ["data", "monitor"], queryFn: () => fetchDataResource("monitor", monitorData) });
   const systemQuery = useQuery({ queryKey: ["data", "system"], queryFn: () => fetchDataResource("system", { stats: systemStats, services: systemServices }) });
+  const nodesQuery = useQuery({
+    queryKey: ["health", "nodes"],
+    queryFn: async () => {
+      const response = await fetch("/api/nodes", { cache: "no-store" });
+      if (!response.ok) throw new Error("Remote node check failed");
+      return await response.json() as NodesHealth;
+    }
+  });
   const storageQuery = useQuery({
     queryKey: ["health", "storage"],
     queryFn: async () => {
@@ -145,6 +159,7 @@ export default function MonitorPage() {
   const setSelectedIncidentId = useMonitorStore((state) => state.setSelectedIncidentId);
 
   const selectedService = useMemo(() => services.find((service) => service.id === selectedServiceId), [selectedServiceId, services]);
+  const remoteNodeHealth = nodesQuery.data?.health ?? [];
   const storage = storageQuery.data?.storage;
   const selectedIncident = useMemo(() => incidents.find((incident) => incident.id === selectedIncidentId), [incidents, selectedIncidentId]);
 
@@ -393,7 +408,7 @@ export default function MonitorPage() {
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
             <StatsCard description="Overall system state" icon={HeartPulse} label="System Health" tone={systemHealthTone} value={stats.systemHealth} />
-            <StatsCard description="Mac Mini uptime" icon={Clock3} label="Uptime" tone="cyan" value={stats.uptime} />
+            <StatsCard description="Host uptime" icon={Clock3} label="Uptime" tone="cyan" value={stats.uptime} />
             <StatsCard description="Current CPU pressure" icon={Cpu} label="CPU Load" tone="amber" value={stats.cpuLoad} />
             <StatsCard description="Current memory pressure" icon={MemoryStick} label="RAM Usage" tone="cyan" value={stats.ramUsage} />
             <StatsCard description="Storage usage now" icon={HardDrive} label="SSD Usage" tone="slate" value={stats.ssdUsage} />
@@ -458,6 +473,21 @@ export default function MonitorPage() {
                   title={action.title}
                 />
               ))}
+            </div>
+          </SidebarPanel>
+
+          <SidebarPanel title="Remote Nodes">
+            <div className="space-y-2 text-sm">
+              {remoteNodeHealth.length ? remoteNodeHealth.map((item) => (
+                <div className="rounded-lg border border-cyan-900/35 bg-sky-950/35 p-3" key={item.node.id}>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium text-cyan-100">{item.node.name}</span>
+                    <span className={item.connected ? "text-emerald-300" : "text-rose-300"}>{item.connected ? "online" : "offline"}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-cyan-600">{item.node.role} · {item.latencyMs ?? "—"}ms</p>
+                  <p className="mt-1 break-all text-xs text-cyan-500">{item.node.baseUrl}</p>
+                </div>
+              )) : <p className="text-cyan-600">No remote nodes configured yet.</p>}
             </div>
           </SidebarPanel>
 

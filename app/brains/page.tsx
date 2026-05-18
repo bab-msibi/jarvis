@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, Bot, BrainCircuit, Database, Link2, Plus, RefreshCw, Sparkles } from "lucide-react";
 
-import { AddBrainInput, AddBrainModal } from "@/components/brains/add-brain-modal";
+import { AddBrainModal } from "@/components/brains/add-brain-modal";
 import { BrainMenuAction } from "@/components/brains/brain-action-menu";
 import { BrainsGrid } from "@/components/brains/brains-grid";
 import { BrainsTable } from "@/components/brains/brains-table";
@@ -33,21 +33,13 @@ import { Brain, BrainStatus } from "@/types/brain";
 
 const pageSize = 10;
 
-const linkedModelTargets = [
-  "GPT-4o",
-  "Claude 3.5 Sonnet",
-  "Llama 3.1 70B",
-  "Gemini 1.5 Pro",
-  "Mistral Large 2",
-  "Phi-3 Medium",
-  "Local Ollama Model"
-];
+const linkedModelTargets = ["Configured by runtime", "Ollama", "OpenAI", "Anthropic", "Google"];
 
 const quickActions = [
-  { key: "add", title: "Add New Brain", description: "Create a new knowledge brain", icon: Plus },
-  { key: "update", title: "Update Brain", description: "Retrain and update knowledge", icon: BrainCircuit },
-  { key: "sync", title: "Sync Knowledge Sources", description: "Sync all connected sources", icon: RefreshCw },
-  { key: "templates", title: "Brain Templates", description: "Use prebuilt brain templates", icon: Sparkles }
+  { key: "add", title: "Add New Brain", description: "Upcoming: create a knowledge brain", icon: Plus, upcoming: true },
+  { key: "update", title: "Update Brain", description: "Upcoming: retrain and update knowledge", icon: BrainCircuit, upcoming: true },
+  { key: "sync", title: "Sync Knowledge Sources", description: "Upcoming: sync connected sources", icon: RefreshCw, upcoming: true },
+  { key: "templates", title: "Brain Templates", description: "Upcoming: use prebuilt brain templates", icon: Sparkles, upcoming: true }
 ] as const;
 
 function formatRelativeTime(isoDate: string) {
@@ -107,7 +99,7 @@ export default function BrainsPage() {
   const [activeModal, setActiveModal] = useState<
     null | "add" | "edit" | "retrain" | "sync" | "delete" | "link_models" | "link_agents"
   >(null);
-  const [selectedBrain, setSelectedBrain] = useState<Brain | undefined>();
+  const selectedBrain = undefined as Brain | undefined;
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   useEffect(() => {
@@ -171,149 +163,53 @@ export default function BrainsPage() {
     }));
   }, [brains]);
 
-  const openModal = (modal: "add" | "edit" | "retrain" | "sync" | "delete" | "link_models" | "link_agents", brain?: Brain) => {
-    setSelectedBrain(brain);
-    setActiveModal(modal);
-  };
-
   const closeModal = () => setActiveModal(null);
 
-  const handleAddBrain = (values: AddBrainInput) => {
-    const now = new Date().toISOString();
-    const created: Brain = {
-      id: `brain-${values.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36)}`,
-      name: values.name,
-      version: values.version,
-      status: values.status,
-      description: values.description,
-      purpose: values.purpose,
-      linkedAgents: [],
-      linkedModels: [],
-      knowledgeSource: values.knowledgeSource,
-      memorySource: values.memorySource,
-      lastUpdated: now,
-      createdAt: now,
-      capabilities: ["custom-capability"],
-      syncStatus: "SYNCED"
-    };
+  const showUpcoming = useCallback((description: string, tone: ToastItem["tone"] = "info") => {
+    pushToast({ title: "Upcoming feature", description, tone });
+  }, [pushToast]);
 
-    setBrains((current) => [created, ...current]);
-    pushToast({ title: "Brain added", description: `${values.name} is now available.`, tone: "success" });
+  const handleAddBrain = () => {
+    showUpcoming("Creating brains will be enabled after the knowledge-source registration API is added.");
   };
 
-  const handleEditBrain = (brainId: string, updates: Partial<Brain>) => {
-    setBrains((current) =>
-      current.map((brain) =>
-        brain.id === brainId
-          ? {
-              ...brain,
-              ...updates,
-              lastUpdated: new Date().toISOString()
-            }
-          : brain
-      )
-    );
-    pushToast({ title: "Brain updated", description: "Brain settings saved successfully.", tone: "success" });
+  const handleEditBrain = () => {
+    showUpcoming("Editing live brains requires safe knowledge-source configuration first.");
   };
 
-  const handleRetrainBrain = (brainId: string) => {
-    setBrains((current) =>
-      current.map((brain) =>
-        brain.id === brainId
-          ? {
-              ...brain,
-              status: "UPDATING",
-              lastUpdated: new Date().toISOString()
-            }
-          : brain
-      )
-    );
-    pushToast({ title: "Retrain started", description: "Brain retraining has been queued.", tone: "info" });
+  const handleRetrainBrain = () => {
+    showUpcoming("Retraining/index rebuilds will be enabled after approved background jobs are added.");
   };
 
-  const handleSyncKnowledge = (brainId: string) => {
-    setBrains((current) =>
-      current.map((brain) =>
-        brain.id === brainId
-          ? {
-              ...brain,
-              syncStatus: "SYNCED",
-              status: "ACTIVE",
-              lastUpdated: new Date().toISOString()
-            }
-          : brain
-      )
-    );
-    pushToast({ title: "Knowledge synced", description: "Connected knowledge sources were refreshed.", tone: "success" });
+  const handleSyncKnowledge = () => {
+    showUpcoming("Knowledge sync will connect to the real indexer in a later build.");
   };
 
-  const handleDeleteBrain = (brainId: string) => {
-    const deleted = brains.find((brain) => brain.id === brainId);
-    setBrains((current) => current.filter((brain) => brain.id !== brainId));
-    pushToast({
-      title: "Brain deleted",
-      description: deleted ? `${deleted.name} was removed.` : "Brain removed.",
-      tone: "warning"
-    });
+  const handleDeleteBrain = () => {
+    showUpcoming("Deleting brains is blocked until approval controls are implemented.", "warning");
   };
 
-  const handleLinkModels = (brainId: string, modelsLinked: string[]) => {
-    setBrains((current) =>
-      current.map((brain) =>
-        brain.id === brainId
-          ? {
-              ...brain,
-              linkedModels: modelsLinked,
-              lastUpdated: new Date().toISOString()
-            }
-          : brain
-      )
-    );
-    pushToast({ title: "Models linked", description: "Brain model routing has been updated.", tone: "success" });
+  const handleLinkModels = () => {
+    showUpcoming("Model linking will be enabled after provider routing policies are live.");
   };
 
-  const handleLinkAgents = (brainId: string, agentsLinked: string[]) => {
-    setBrains((current) =>
-      current.map((brain) =>
-        brain.id === brainId
-          ? {
-              ...brain,
-              linkedAgents: agentsLinked,
-              lastUpdated: new Date().toISOString()
-            }
-          : brain
-      )
-    );
-    pushToast({ title: "Agents linked", description: "Brain agent access rules were updated.", tone: "success" });
+  const handleLinkAgents = () => {
+    showUpcoming("Agent linking will be enabled after agent access policies are live.");
   };
 
-  const handleViewDetails = (brain: Brain) => {
-    pushToast({
-      title: "Brain detail route ready",
-      description: `Prepared for /brains/${brain.id}`,
-      tone: "info"
-    });
+  const handleViewDetails = () => {
+    showUpcoming("Brain detail routes will be added after live source inspection is available.");
   };
 
-  const handleMenuAction = (brain: Brain, action: BrainMenuAction) => {
-    if (action === "view") return handleViewDetails(brain);
-    if (action === "edit") return openModal("edit", brain);
-    if (action === "sync") return openModal("sync", brain);
-    if (action === "retrain") return openModal("retrain", brain);
-    if (action === "link_models") return openModal("link_models", brain);
-    if (action === "link_agents") return openModal("link_agents", brain);
-    if (action === "delete") return openModal("delete", brain);
+  const handleMenuAction = (_brain: Brain, action: BrainMenuAction) => {
+    showUpcoming(`${action} for live brains will be enabled after safe knowledge controls are added.`);
   };
 
   const handleQuickAction = (action: (typeof quickActions)[number]["key"]) => {
-    if (action === "add") return openModal("add");
-    if (action === "update") return openModal("edit", brains[0]);
-    if (action === "sync") return openModal("sync", brains[0]);
-    pushToast({
-      title: "Templates coming soon",
-      description: "Brain template library will be wired during backend integration.",
-      tone: "info"
-    });
+    if (action === "add") return showUpcoming("Adding brains needs knowledge-source registration and approval controls first.");
+    if (action === "update") return showUpcoming("Brain updates/retraining will run through approved background jobs later.");
+    if (action === "sync") return showUpcoming("Knowledge sync will connect to the real indexer in a later build.");
+    return showUpcoming("Brain templates will be connected after live brain creation is implemented.");
   };
 
   return (
@@ -325,17 +221,22 @@ export default function BrainsPage() {
               <ActionButtonGroup>
                 <button
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-cyan-500/55 bg-cyan-500/20 px-4 text-sm text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-500/30"
-                  onClick={() => openModal("add")}
+                  onClick={() => showUpcoming("Adding brains needs knowledge-source registration and approval controls first.")}
                   type="button"
                 >
                   <Plus className="h-4 w-4" />
                   Add Brain
+                  <span className="rounded-full border border-amber-400/30 px-1.5 py-0.5 text-[10px] uppercase text-amber-200">Upcoming</span>
                 </button>
               </ActionButtonGroup>
             }
-            subtitle="Manage, update and configure all AI brains and knowledge systems."
+            subtitle="Live workspace knowledge sources from this Mac. Controls marked Upcoming are intentionally not active yet."
             title="Brains"
           />
+
+          <section className="rounded-2xl border border-amber-400/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            Live mode is enabled: dummy brains were removed. Brains now reflect real workspace memory, second-brain, project, and JARVIS repo sources.
+          </section>
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <StatsCard description="All knowledge systems" icon={BrainCircuit} label="Total Brains" tone="cyan" value={counts.total} />
@@ -430,6 +331,7 @@ export default function BrainsPage() {
                   key={action.key}
                   onClick={() => handleQuickAction(action.key)}
                   title={action.title}
+                  upcoming={action.upcoming}
                 />
               ))}
             </div>
