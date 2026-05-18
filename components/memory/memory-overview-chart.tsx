@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Pie, PieChart, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 import { MemoryBreakdownItem } from "@/types/memory";
@@ -10,10 +11,17 @@ type MemoryOverviewChartProps = {
 };
 
 export function MemoryOverviewChart({ total, data }: MemoryOverviewChartProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   return (
     <div className="space-y-3">
       <div className="relative h-[190px]">
-        <ResponsiveContainer height="100%" minHeight={180} minWidth={0} width="100%">
+        {mounted ? <ResponsiveContainer height="100%" minHeight={180} minWidth={0} width="100%">
           <PieChart>
             <Pie cx="50%" cy="50%" data={data} dataKey="value" innerRadius={48} outerRadius={72} paddingAngle={2} stroke="none">
               {data.map((entry) => (
@@ -22,7 +30,7 @@ export function MemoryOverviewChart({ total, data }: MemoryOverviewChartProps) {
             </Pie>
             <Tooltip contentStyle={{ background: "#071523", border: "1px solid rgba(56, 189, 248, 0.4)", borderRadius: 8 }} />
           </PieChart>
-        </ResponsiveContainer>
+        </ResponsiveContainer> : null}
 
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
           <p className="text-3xl text-cyan-100">{total.toLocaleString()}</p>

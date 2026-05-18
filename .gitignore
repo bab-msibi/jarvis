@@ -20,3 +20,6 @@ pnpm-debug.log*
 
 # local env files
 .env*.local
+
+# local JARVIS runtime data
+.jarvis-data/

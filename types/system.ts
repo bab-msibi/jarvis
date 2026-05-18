@@ -1,5 +1,15 @@
 export type NodeStatus = "online" | "offline" | "warning";
 
+export type SystemService = {
+  id: string;
+  name: string;
+  description: string;
+  status: NodeStatus;
+  endpoint?: string;
+  lastChecked: string;
+  mocked: boolean;
+};
+
 export type SystemStats = {
   name: string;
   specs: string;

@@ -55,7 +55,7 @@ export const settingsDefaults: JarvisSettings = {
     autoSaveSettings: true
   },
   system: {
-    deviceName: "Mac Mini M4",
+    deviceName: "Admin’s MacBook Pro",
     hostAddress: "192.168.1.24",
     agentGatewayUrl: "http://localhost:4100",
     localApiPort: 3000,
@@ -185,7 +185,7 @@ export const settingsCategories: SettingsCategoryConfig[] = [
   {
     key: "system",
     label: "System",
-    description: "Mac Mini M4 connectivity and runtime behavior.",
+    description: "Admin’s MacBook Pro connectivity and runtime behavior.",
     fields: [
       { name: "system.deviceName", type: "text", label: "Device Name", description: "Target machine display name." },
       { name: "system.hostAddress", type: "text", label: "Host Address", description: "Primary host or IP for orchestration traffic." },
@@ -447,7 +447,7 @@ export const settingsCategories: SettingsCategoryConfig[] = [
 
 export const settingsSystemProfile: SettingsSystemProfile = {
   version: "JARVIS v2.8.4",
-  device: "Mac Mini M4",
+  device: "Admin’s MacBook Pro",
   osVersion: "macOS 14.4",
   activeAgents: 8,
   activeModels: 8,

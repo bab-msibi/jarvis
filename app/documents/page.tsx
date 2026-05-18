@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   FilePlus2,
   FileSearch,
@@ -39,8 +40,9 @@ import { PageHeader } from "@/components/shared/page-header";
 import { ProgressBar } from "@/components/shared/ProgressBar";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
-import { documentsData } from "@/lib/mock/documents";
-import { systemStats } from "@/lib/mock/system";
+import { fetchDataResource } from "@/lib/api-client";
+import { documentsData } from "@/lib/data/documents";
+import { systemServices, systemStats } from "@/lib/data/system";
 import { DocumentsViewMode, useDocumentsStore } from "@/lib/store/documents-store";
 import { DocumentItem, DocumentType } from "@/types/document";
 import { toSizeInMB } from "@/components/documents/document-utils";
@@ -89,6 +91,8 @@ export default function DocumentsPage() {
   const [documents, setDocuments] = useState<DocumentItem[]>(() => documentsData.documents);
   const [activityLogs, setActivityLogs] = useState(() => documentsData.activityLogs);
   const [indexingStatus, setIndexingStatus] = useState(() => documentsData.indexingStatus);
+  const documentsQuery = useQuery({ queryKey: ["data", "documents"], queryFn: () => fetchDataResource("documents", documentsData) });
+  const systemQuery = useQuery({ queryKey: ["data", "system"], queryFn: () => fetchDataResource("system", { stats: systemStats, services: systemServices }) });
   const [searchValue, setSearchValue] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [typeFilter, setTypeFilter] = useState<"ALL" | DocumentType>("ALL");
@@ -99,6 +103,17 @@ export default function DocumentsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeModal, setActiveModal] = useState<ModalState>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  useEffect(() => {
+    if (!documentsQuery.data?.data) return;
+    queueMicrotask(() => {
+      setDocuments(documentsQuery.data.data.documents);
+      setActivityLogs(documentsQuery.data.data.activityLogs);
+      setIndexingStatus(documentsQuery.data.data.indexingStatus);
+    });
+  }, [documentsQuery.data]);
+
+  const liveDocumentsData = documentsQuery.data?.data ?? documentsData;
 
   const viewMode = useDocumentsStore((state) => state.viewMode);
   const setViewMode = useDocumentsStore((state) => state.setViewMode);
@@ -117,7 +132,7 @@ export default function DocumentsPage() {
     }, 3200);
   }, []);
 
-  const categoryOptions = useMemo(() => documentsData.categories.map((entry) => entry.name), []);
+  const categoryOptions = useMemo(() => (documentsQuery.data?.data.categories ?? documentsData.categories).map((entry) => entry.name), [documentsQuery.data]);
   const typeOptions = useMemo(() => Array.from(new Set(documents.map((document) => document.type))), [documents]);
   const agentOptions = useMemo(() => Array.from(new Set(documents.map((document) => document.linkedAgent))), [documents]);
   const brainOptions = useMemo(() => Array.from(new Set(documents.map((document) => document.linkedBrain))), [documents]);
@@ -318,7 +333,7 @@ export default function DocumentsPage() {
   const indexStatusLabel = isIndexerRunning ? "Running" : indexingStatus.scanStatus;
 
   return (
-    <DashboardLayout system={systemStats}>
+    <DashboardLayout system={systemQuery.data?.data.stats ?? systemStats}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
           <PageHeader
@@ -355,11 +370,11 @@ export default function DocumentsPage() {
           />
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-            <StatsCard description="All documents" icon={Files} label="Total Documents" tone="cyan" value={documentsData.totals.documents.toLocaleString()} />
-            <StatsCard description="Storage used" icon={HardDrive} label="Total Size" tone="green" value={documentsData.totals.totalSize} />
-            <StatsCard description="Last 7 days" icon={Upload} label="Recent Uploads" tone="cyan" value={documentsData.totals.recentUploads} />
-            <StatsCard description="Document categories" icon={FilePlus2} label="Categories" tone="amber" value={documentsData.totals.categories} />
-            <StatsCard description="Shared with agents" icon={Share2} label="Shared Documents" tone="rose" value={documentsData.totals.sharedDocuments} />
+            <StatsCard description="All documents" icon={Files} label="Total Documents" tone="cyan" value={liveDocumentsData.totals.documents.toLocaleString()} />
+            <StatsCard description="Storage used" icon={HardDrive} label="Total Size" tone="green" value={liveDocumentsData.totals.totalSize} />
+            <StatsCard description="Last 7 days" icon={Upload} label="Recent Uploads" tone="cyan" value={liveDocumentsData.totals.recentUploads} />
+            <StatsCard description="Document categories" icon={FilePlus2} label="Categories" tone="amber" value={liveDocumentsData.totals.categories} />
+            <StatsCard description="Shared with agents" icon={Share2} label="Shared Documents" tone="rose" value={liveDocumentsData.totals.sharedDocuments} />
             <StatsCard description="AI indexed docs" icon={Sparkles} label="AI Processed" tone="slate" value={aiProcessedCount.toLocaleString()} />
           </section>
 
@@ -417,15 +432,15 @@ export default function DocumentsPage() {
             onShare={(document) => openModal("share", document)}
             onView={handleViewDocument}
             pageSize={pageSize}
-            totalDisplayCount={documentsData.totals.documents}
+            totalDisplayCount={liveDocumentsData.totals.documents}
             totalDocuments={filteredDocuments.length}
             totalPages={totalPages}
             viewMode={viewMode}
           />
 
           <section className="grid gap-3 xl:grid-cols-3">
-            <CategoriesPanel categories={documentsData.categories} />
-            <StorageOverviewChart storage={documentsData.storage} />
+            <CategoriesPanel categories={liveDocumentsData.categories} />
+            <StorageOverviewChart storage={liveDocumentsData.storage} />
             <RecentActivityPanel logs={activityLogs} />
           </section>
 
@@ -453,15 +468,15 @@ export default function DocumentsPage() {
 
         <aside className="space-y-4">
           <SidebarPanel title="Document Overview">
-            <DocumentOverviewChart breakdown={documentsData.documentTypeBreakdown} totalDocuments={documentsData.totals.documents} />
+            <DocumentOverviewChart breakdown={liveDocumentsData.documentTypeBreakdown} totalDocuments={liveDocumentsData.totals.documents} />
           </SidebarPanel>
 
           <SidebarPanel title="Top Categories">
-            <TopCategoriesPanel categories={documentsData.categories} />
+            <TopCategoriesPanel categories={liveDocumentsData.categories} />
           </SidebarPanel>
 
           <SidebarPanel title="Top Uploaded By">
-            <UploadedByPanel uploads={documentsData.uploads} />
+            <UploadedByPanel uploads={liveDocumentsData.uploads} />
           </SidebarPanel>
 
           <SidebarPanel title="Quick Actions">

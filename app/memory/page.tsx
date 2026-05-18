@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   Archive,
@@ -37,8 +38,9 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
-import { memoryData } from "@/lib/mock/memory";
-import { systemStats } from "@/lib/mock/system";
+import { fetchDataResource } from "@/lib/api-client";
+import { memoryData } from "@/lib/data/memory";
+import { systemServices, systemStats } from "@/lib/data/system";
 import { useMemoryStore } from "@/lib/store/memory-store";
 import { MemoryImportance, MemoryItem, MemoryType } from "@/types/memory";
 
@@ -103,6 +105,8 @@ function sortMemories(memories: MemoryItem[], sortBy: MemorySortOption) {
 export default function MemoryPage() {
   const [memories, setMemories] = useState<MemoryItem[]>(() => memoryData.memories);
   const [optimizationLogs, setOptimizationLogs] = useState(() => memoryData.optimizationLogs);
+  const memoryQuery = useQuery({ queryKey: ["data", "memory"], queryFn: () => fetchDataResource("memory", memoryData) });
+  const systemQuery = useQuery({ queryKey: ["data", "system"], queryFn: () => fetchDataResource("system", { stats: systemStats, services: systemServices }) });
   const [searchValue, setSearchValue] = useState("");
   const [typeFilter, setTypeFilter] = useState<"ALL" | MemoryType>("ALL");
   const [brainFilter, setBrainFilter] = useState("ALL");
@@ -115,6 +119,16 @@ export default function MemoryPage() {
   const [activeModal, setActiveModal] = useState<ModalState>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [nextOptimizationCountdown, setNextOptimizationCountdown] = useState("05h 32m 18s");
+
+  useEffect(() => {
+    if (!memoryQuery.data?.data) return;
+    queueMicrotask(() => {
+      setMemories(memoryQuery.data.data.memories);
+      setOptimizationLogs(memoryQuery.data.data.optimizationLogs);
+    });
+  }, [memoryQuery.data]);
+
+  const liveMemoryData = memoryQuery.data?.data ?? memoryData;
 
   const viewMode = useMemoryStore((state) => state.viewMode);
   const setViewMode = useMemoryStore((state) => state.setViewMode);
@@ -314,18 +328,18 @@ export default function MemoryPage() {
   };
 
   return (
-    <DashboardLayout system={systemStats}>
+    <DashboardLayout system={systemQuery.data?.data.stats ?? systemStats}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
           <PageHeader subtitle="Monitor, manage and optimize AI memory across all systems and agents." title="Memory Management" />
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-            <StatsCard description="All time memories" icon={Database} label="Total Memories" tone="cyan" value={memoryData.totals.totalMemories.toLocaleString()} />
-            <StatsCard description="In use" icon={Activity} label="Active Memories" tone="green" value={memoryData.totals.activeMemories.toLocaleString()} />
-            <StatsCard description="Temporary" icon={Layers} label="Short Term" tone="rose" value={memoryData.totals.shortTerm.toLocaleString()} />
-            <StatsCard description="Persistent" icon={Archive} label="Long Term" tone="amber" value={memoryData.totals.longTerm.toLocaleString()} />
-            <StatsCard description="Total embeddings" icon={BrainCircuit} label="Vector Embeddings" tone="slate" value={memoryData.totals.embeddings} />
-            <StatsCard description="Storage used" icon={HardDrive} label="Memory Usage" tone="cyan" value={memoryData.totals.memoryUsage} />
+            <StatsCard description="All time memories" icon={Database} label="Total Memories" tone="cyan" value={liveMemoryData.totals.totalMemories.toLocaleString()} />
+            <StatsCard description="In use" icon={Activity} label="Active Memories" tone="green" value={liveMemoryData.totals.activeMemories.toLocaleString()} />
+            <StatsCard description="Temporary" icon={Layers} label="Short Term" tone="rose" value={liveMemoryData.totals.shortTerm.toLocaleString()} />
+            <StatsCard description="Persistent" icon={Archive} label="Long Term" tone="amber" value={liveMemoryData.totals.longTerm.toLocaleString()} />
+            <StatsCard description="Total embeddings" icon={BrainCircuit} label="Vector Embeddings" tone="slate" value={liveMemoryData.totals.embeddings} />
+            <StatsCard description="Storage used" icon={HardDrive} label="Memory Usage" tone="cyan" value={liveMemoryData.totals.memoryUsage} />
           </section>
 
           <section className="panel-base rounded-2xl p-4 sm:p-5">
@@ -386,16 +400,16 @@ export default function MemoryPage() {
             onShare={handleShareMemory}
             onView={handleViewMemory}
             pageSize={pageSize}
-            totalDisplayCount={memoryData.totals.totalMemories}
+            totalDisplayCount={liveMemoryData.totals.totalMemories}
             totalMemories={filteredMemories.length}
             totalPages={totalPages}
             viewMode={viewMode}
           />
 
           <section className="grid gap-3 xl:grid-cols-3">
-            <MemoryDistributionChart data={memoryData.memoryDistributionByBrain} total={memoryData.totals.totalMemories} />
-            <MemoryTimelineChart data={memoryData.memoryTimeline} />
-            <MemoryTypesRadarChart data={memoryData.memoryTypesRadar} />
+            <MemoryDistributionChart data={liveMemoryData.memoryDistributionByBrain} total={liveMemoryData.totals.totalMemories} />
+            <MemoryTimelineChart data={liveMemoryData.memoryTimeline} />
+            <MemoryTypesRadarChart data={liveMemoryData.memoryTypesRadar} />
           </section>
 
           <section className="panel-base rounded-xl px-4 py-3">
@@ -444,20 +458,20 @@ export default function MemoryPage() {
 
         <aside className="space-y-4">
           <SidebarPanel title="Memory Overview">
-            <MemoryOverviewChart data={memoryData.memoryOverview} total={memoryData.totals.totalMemories} />
+            <MemoryOverviewChart data={liveMemoryData.memoryOverview} total={liveMemoryData.totals.totalMemories} />
           </SidebarPanel>
 
           <SidebarPanel title="Memory Importance">
             <div className="space-y-2.5">
-              {memoryData.memoryImportanceBreakdown.map((item) => {
-                const max = Math.max(1, ...memoryData.memoryImportanceBreakdown.map((entry) => entry.value));
+              {liveMemoryData.memoryImportanceBreakdown.map((item) => {
+                const max = Math.max(1, ...liveMemoryData.memoryImportanceBreakdown.map((entry) => entry.value));
                 const percent = Math.round((item.value / max) * 100);
                 return (
                   <div className="space-y-1" key={item.label}>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-cyan-200">{item.label}</span>
                       <span className="text-cyan-500">
-                        {item.value.toLocaleString()} ({((item.value / memoryData.totals.totalMemories) * 100).toFixed(1)}%)
+                        {item.value.toLocaleString()} ({((item.value / liveMemoryData.totals.totalMemories) * 100).toFixed(1)}%)
                       </span>
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-sky-950/70">
@@ -471,10 +485,10 @@ export default function MemoryPage() {
 
           <SidebarPanel title="Memory Usage">
             <MemoryUsagePanel
-              availableGB={memoryData.memoryUsage.availableGB}
-              slices={memoryData.memoryUsage.slices}
-              totalAllocatedGB={memoryData.memoryUsage.totalAllocatedGB}
-              usedGB={memoryData.memoryUsage.usedGB}
+              availableGB={liveMemoryData.memoryUsage.availableGB}
+              slices={liveMemoryData.memoryUsage.slices}
+              totalAllocatedGB={liveMemoryData.memoryUsage.totalAllocatedGB}
+              usedGB={liveMemoryData.memoryUsage.usedGB}
             />
           </SidebarPanel>
 
@@ -517,7 +531,7 @@ export default function MemoryPage() {
 
       <ExportMemoryModal onClose={closeModal} onExport={handleExportMemory} open={activeModal === "export"} />
 
-      <ConfigureRetentionModal onClose={closeModal} onSave={handleRetentionSave} open={activeModal === "retention"} policies={memoryData.retentionPolicies} />
+      <ConfigureRetentionModal onClose={closeModal} onSave={handleRetentionSave} open={activeModal === "retention"} policies={liveMemoryData.retentionPolicies} />
 
       <MemorySettingsModal onClose={closeModal} onSave={handleSettingsSave} open={activeModal === "settings"} />
 

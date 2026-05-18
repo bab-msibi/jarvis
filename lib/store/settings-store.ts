@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 
-import { settingsDefaults } from "@/lib/mock/settings";
+import { settingsDefaults } from "@/lib/data/settings";
 import { JarvisSettings, SettingsCategoryKey } from "@/types/settings";
 
 type SettingsStoreState = {

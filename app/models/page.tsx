@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   Bot,
@@ -31,8 +32,9 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { ActionButtonGroup } from "@/components/shared/action-button-group";
 import { PageHeader } from "@/components/shared/page-header";
 import { ToastItem, ToastStack } from "@/components/ui/toast-stack";
-import { models as baseModels } from "@/lib/mock/models";
-import { systemStats } from "@/lib/mock/system";
+import { fetchDataResource } from "@/lib/api-client";
+import { models as baseModels } from "@/lib/data/models";
+import { systemServices, systemStats } from "@/lib/data/system";
 import { Model, ModelStatus, ModelType } from "@/types/model";
 
 type SortOption = "recent" | "usage_desc" | "usage_asc" | "name_asc" | "provider";
@@ -76,6 +78,8 @@ function sortModels(models: Model[], sortBy: SortOption) {
 
 export default function ModelsPage() {
   const [models, setModels] = useState<Model[]>(() => baseModels);
+  const modelsQuery = useQuery({ queryKey: ["data", "models"], queryFn: () => fetchDataResource("models", baseModels) });
+  const systemQuery = useQuery({ queryKey: ["data", "system"], queryFn: () => fetchDataResource("system", { stats: systemStats, services: systemServices }) });
   const [searchValue, setSearchValue] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | ModelStatus>("ALL");
   const [providerFilter, setProviderFilter] = useState("ALL");
@@ -86,6 +90,10 @@ export default function ModelsPage() {
   const [activeModal, setActiveModal] = useState<null | "add" | "edit" | "test" | "delete" | "sync">(null);
   const [selectedModel, setSelectedModel] = useState<Model | undefined>();
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  useEffect(() => {
+    if (modelsQuery.data?.data) queueMicrotask(() => setModels(modelsQuery.data.data));
+  }, [modelsQuery.data]);
 
   const pushToast = useCallback((payload: Omit<ToastItem, "id">) => {
     const id = crypto.randomUUID();
@@ -234,7 +242,7 @@ export default function ModelsPage() {
   };
 
   return (
-    <DashboardLayout system={systemStats}>
+    <DashboardLayout system={systemQuery.data?.data.stats ?? systemStats}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <main className="min-w-0 space-y-4">
           <PageHeader
